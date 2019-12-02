@@ -1,0 +1,88 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="TextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="InputEdiText">
+        <item name="android:textColorHint">@color/grey</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:background">@drawable/et_background</item>
+    </style>
+
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/button_background</item>
+    </style>
+
+    <style name="PurpleTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:buttonStyle">@style/PurpleTheme.Button</item>
+        <item name="textInputStyle">@style/PurpleTheme.TextInputLayout</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">15sp</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeStyle">@style/PurpleTheme.Actionmode</item>
+    </style>
+
+
+    <style name="PurpleTheme.EditText" parent="@style/TextAppearance.Design.Hint">
+        <item name="android:textColorHint">@color/grey</item>
+        <item name="hintTextColor">@color/grey</item>
+        <item name="android:backgroundTint">@color/transparent</item>
+        <item name="android:background">@drawable/et_background</item>
+        <item name="android:padding">15dp</item>
+    </style>
+
+    <style name="PurpleTheme.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/grey</item>
+        <item name="errorTextColor">@color/orange</item>
+        <item name="boxStrokeColor">@color/gradientEnd</item>
+        <item name="boxCornerRadiusBottomEnd">20dp</item>
+        <item name="boxCornerRadiusBottomStart">5dp</item>
+        <item name="boxCornerRadiusTopEnd">5dp</item>
+        <item name="boxCornerRadiusTopStart">20dp</item>
+    </style>
+
+    <style name="PurpleTheme.Button">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="PurpleTheme.ItemTextViewMediumFont">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="PurpleTheme.Actionmode" parent="@style/Widget.AppCompat.ActionMode">
+        <item name="background">@color/darkPurple</item>
+    </style>
+
+    <style name="LoginTitle">
+        <item name="android:textSize">30sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+
+</resources>

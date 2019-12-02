@@ -1,0 +1,39 @@
+<resources>
+    <!-- Reply Preference -->
+    <string-array name="reply_entries">
+        <item>Reply</item>
+        <item>Reply to all</item>
+    </string-array>
+
+    <string-array name="reply_values">
+        <item>reply</item>
+        <item>reply_all</item>
+    </string-array>
+
+    <array name="horizontal_double_table_background">
+        <item>@drawable/mesadoble_horizontal_bloqueada</item>
+        <item>@drawable/mesadoble_horizontal</item>
+        <item>@drawable/mesadoble_horizontal_ocupada</item>
+    </array>
+    <array name="vertical_double_table_background">
+        <item>@drawable/mesadoble_vertical_bloqueada</item>
+        <item>@drawable/mesadoble_vertical</item>
+        <item>@drawable/mesadoble_vertical_ocupada</item>
+    </array>
+    <array name="quadruple_table_background">
+        <item>@drawable/mesacuadruple_bloqueada</item>
+        <item>@drawable/mesacuadruple</item>
+        <item>@drawable/mesacuadruple_ocupada</item>
+    </array>
+
+    <array name="octa_table_background">
+        <item>@drawable/mesaredonda_bloqueada</item>
+        <item>@drawable/mesaredonda</item>
+        <item>@drawable/mesaredonda_ocupada</item>
+    </array>
+    <array name="single_table_background">
+        <item>@drawable/silla_bloqueada</item>
+        <item>@drawable/silla</item>
+        <item>@drawable/silla_ocupada</item>
+    </array>
+</resources>

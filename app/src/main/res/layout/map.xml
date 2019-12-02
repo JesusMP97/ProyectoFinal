@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/plano_restaurante"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/ivDoubleTable1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="1"
+        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable2"
+        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable2"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="2"
+        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable3"
+        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable3"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable5"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable6"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ivDoubleTable4"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="6"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintStart_toEndOf="@+id/ivDoubleTable5"
+        app:srcCompat="@drawable/mesadoble_horizontal" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="7"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivDoubleTable3"
+        app:srcCompat="@drawable/mesadoble_vertical" />
+
+    <ImageView
+        android:id="@+id/ivDoubleTable8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="8"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivDoubleTable7"
+        app:srcCompat="@drawable/mesadoble_vertical" />
+
+    <ImageView
+        android:id="@+id/ivQuadrupleTable1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:contentDescription="9"
+        app:layout_constraintEnd_toStartOf="@+id/ivQuadrupleTable3"
+        app:layout_constraintTop_toTopOf="@+id/ivQuadrupleTable3"
+        app:srcCompat="@drawable/mesacuadruple" />
+
+    <ImageView
+        android:id="@+id/ivQuadrupleTable2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:contentDescription="10"
+        app:layout_constraintEnd_toEndOf="@+id/ivQuadrupleTable1"
+        app:layout_constraintTop_toBottomOf="@+id/ivQuadrupleTable1"
+        app:srcCompat="@drawable/mesacuadruple" />
+
+    <ImageView
+        android:id="@+id/ivQuadrupleTable3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="11"
+        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable7"
+        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable7"
+        app:srcCompat="@drawable/mesacuadruple" />
+
+    <ImageView
+        android:id="@+id/ivQuadrupleTable4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:contentDescription="12"
+        app:layout_constraintEnd_toEndOf="@+id/ivQuadrupleTable3"
+        app:layout_constraintTop_toBottomOf="@+id/ivQuadrupleTable3"
+        app:srcCompat="@drawable/mesacuadruple" />
+
+    <ImageView
+        android:id="@+id/ivOctaTable1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="32dp"
+        android:contentDescription="13"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mesaredonda" />
+
+    <ImageView
+        android:id="@+id/ivOctaTable2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="70dp"
+        android:contentDescription="14"
+        app:layout_constraintStart_toEndOf="@+id/ivOctaTable1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mesaredonda" />
+
+    <ImageView
+        android:id="@+id/ivOctaTable3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:contentDescription="15"
+        app:layout_constraintStart_toStartOf="@+id/ivOctaTable1"
+        app:layout_constraintTop_toBottomOf="@+id/ivOctaTable1"
+        app:srcCompat="@drawable/mesaredonda" />
+
+    <ImageView
+        android:id="@+id/ivBar1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="46dp"
+        android:contentDescription="16"
+        android:rotation="180"
+        app:layout_constraintBottom_toTopOf="@+id/ivDoubleTable4"
+        app:layout_constraintEnd_toStartOf="@+id/ivBar2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/silla" />
+
+    <ImageView
+        android:id="@+id/ivBar2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="17"
+        android:rotation="180"
+        app:layout_constraintBottom_toBottomOf="@+id/ivBar1"
+        app:layout_constraintEnd_toStartOf="@+id/ivBar3"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ivBar1"
+        app:srcCompat="@drawable/silla" />
+
+    <ImageView
+        android:id="@+id/ivBar3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:contentDescription="18"
+        android:rotation="180"
+        app:layout_constraintBottom_toBottomOf="@+id/ivBar2"
+        app:layout_constraintEnd_toStartOf="@+id/ivBar4"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ivBar2"
+        app:srcCompat="@drawable/silla" />
+
+    <ImageView
+        android:id="@+id/ivBar4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="19"
+        android:rotation="180"
+        app:layout_constraintStart_toEndOf="@+id/ivBar3"
+        app:layout_constraintTop_toBottomOf="@+id/ivBar5"
+        app:srcCompat="@drawable/silla" />
+
+    <ImageView
+        android:id="@+id/ivBar5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:contentDescription="20"
+        android:rotation="180"
+        app:layout_constraintBottom_toTopOf="@+id/ivBar3"
+        app:layout_constraintStart_toStartOf="@+id/ivBar4"
+        app:srcCompat="@drawable/silla" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="335dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

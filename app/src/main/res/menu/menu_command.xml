@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/itSearch"
+        android:icon="@drawable/ic_search_white_24dp"
+        android:title="Search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:id="@+id/itFilter"
+        android:icon="@drawable/ic_filter_list_white_24dp"
+        android:title="Filter"
+        app:showAsAction="always|withText">
+        <menu>
+            <item
+                android:id="@+id/itBebidas"
+                android:title="Bebidas">
+                <menu>
+                    <item
+                        android:id="@+id/sbItRefrescos"
+                        android:title="Refrescos" />
+                    <item
+                        android:id="@+id/sbItCerveza"
+                        android:title="Cerveza" />
+                    <item
+                        android:id="@+id/sbItAgua"
+                        android:title="Agua" />
+                </menu>
+            </item>
+            <item android:title="Comida" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/itSort"
+        android:icon="@drawable/ic_reorder_white_24dp"
+        android:title="Item"
+        app:showAsAction="ifRoom|withText">
+        <menu>
+            <item
+                android:id="@+id/subItName"
+                android:title="By Name" />
+            <item
+                android:id="@+id/subItPrice"
+                android:title="By price" />
+        </menu>
+    </item>
+</menu>

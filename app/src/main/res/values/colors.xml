@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="colorPrimary">#7620E4</color>
+    <color name="colorPrimaryDark">#5B26A5</color>
+    <color name="colorAccent">#1BACD8</color>
+    <color name="colorAccentLight">#2FECD4</color>
+
+    <color name="lightPurple0">#E0D3F5</color>
+    <color name="lightPurple1">#AA84E7</color>
+    <color name="lightPurple2">#976AEB</color>
+    <color name="lightPurple3">#6C3DA2</color>
+    <color name="darkPurple">#62498A</color>
+    <color name="darkPurple1">#4F3B6D</color>
+    <color name="darkPurple1Transparent">#D9C6E2</color>
+
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gradientStart">#1981AA</color>
+    <color name="gradientEnd">#7E23D8</color>
+    <color name="grey">#8FDFDADA</color>
+    <color name="greyLight">#BFF7F5F5</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="orange">#FF9800</color>
+</resources>
