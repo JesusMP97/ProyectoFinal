@@ -27,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
+import com.google.android.material.snackbar.Snackbar;
+
 import org.izv.circularfloatingbutton.FloatingActionButton;
 import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
@@ -548,8 +550,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            final Factura current = adapter.getInvoices().get(viewHolder.getAdapterPosition());
             adapter.getInvoices().remove(viewHolder.getAdapterPosition());
             adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+            View parentLayout = findViewById(android.R.id.content);
+            Snackbar.make(parentLayout, "Factura borrada", Snackbar.LENGTH_LONG)
+                    .setAction("Deshacer", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            adapter.getInvoices().add(current);
+                            adapter.notifyDataSetChanged();
+                        }
+                    })
+                    .show();
         }
     }
 }
