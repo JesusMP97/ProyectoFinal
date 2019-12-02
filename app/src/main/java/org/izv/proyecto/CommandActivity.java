@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ import org.izv.proyecto.view.adapter.CommandViewAdapter;
 import org.izv.proyecto.view.adapter.ProductViewAdapter;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.CommandViewModel;
+import org.izv.proyecto.view.utils.BeforeCrud;
 import org.izv.proyecto.view.utils.IO;
 
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ public class CommandActivity extends AppCompatActivity {
     private static final String KEY_INVOICE_ID = "invoiceId";
     private static final String KEY_TABLE = "table";
     private static final String KEY_URL = "url";
+    private static final long MIN_AMOUNT = 1;
     private static final long POST_CLOSE_SEARCH_VIEW = 300;
     private static final String PRICE_FORMAT = "%.2f";
     private SubActionButton btLogOut, btProfile, btSettings;
@@ -72,6 +75,7 @@ public class CommandActivity extends AppCompatActivity {
     private TextView tvCommandTotal;
     private String url;
     private CommandViewModel viewModel;
+    private Contenedor.CommandDetail removed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -212,6 +216,73 @@ public class CommandActivity extends AppCompatActivity {
                         .setCommandTotalValue();
             }
         });
+        commandAdapter.setOnClickListener(new CommandViewAdapter.OnClickListener() {
+            @Override
+            public void onItemClick(Contenedor.CommandDetail current, View view) {
+                findSelectedView(view.getId(), current);
+            }
+        });
+        return this;
+    }
+
+    private CommandActivity crud(Contenedor.CommandDetail commands, BeforeCrud beforeCrud) {
+        for (Contenedor.CommandDetail cc : commandAdapter.getCommands()) {
+            if (cc.getProduct().getId() == commands.getProduct().getId()) {
+                beforeCrud.doIt(cc);
+            }
+        }
+        return this;
+    }
+
+    private CommandActivity findSelectedView(int id, Contenedor.CommandDetail commands) {
+        switch (id) {
+            case R.id.tvCommandItemMore:
+                crud(commands, new BeforeCrud() {
+                    @Override
+                    public void doIt(Contenedor.CommandDetail current) {
+                        long units = current.getCommand().getUnidades();
+                        units++;
+                        current.getCommand().setUnidades(units);
+                        commandAdapter.notifyDataSetChanged();
+                    }
+                });
+                break;
+            case R.id.tvCommandItemLess:
+                removed = null;
+                crud(commands, new BeforeCrud() {
+                    @Override
+                    public void doIt(Contenedor.CommandDetail current) {
+                        long units = current.getCommand().getUnidades();
+                        if (units > MIN_AMOUNT) {
+                            units--;
+                            current.getCommand().setUnidades(units);
+                        } else {
+                            removed = current;
+                        }
+                    }
+                });
+                removeSelectedCommand();
+                commandAdapter.notifyDataSetChanged();
+                break;
+            case R.id.tvCommandItemClear:
+                removed = null;
+                crud(commands, new BeforeCrud() {
+                    @Override
+                    public void doIt(Contenedor.CommandDetail current) {
+                        removed = current;
+                    }
+                });
+                removeSelectedCommand();
+                commandAdapter.notifyDataSetChanged();
+                break;
+        }
+        return this;
+    }
+
+    private CommandActivity removeSelectedCommand() {
+        if (removed != null) {
+            commandAdapter.getCommands().remove(removed);
+        }
         return this;
     }
 
@@ -328,8 +399,9 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    @SuppressLint("SetTextI18n")
     public CommandActivity setCommandTotalValue() {
-        tvCommandTotal.setText(getTotalPriceOfCommands());
+        tvCommandTotal.setText(getString(R.string.total) + " " + getTotalPriceOfCommands() + getString(R.string.euro));
         return this;
     }
 

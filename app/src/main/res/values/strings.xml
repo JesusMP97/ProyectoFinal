@@ -50,5 +50,7 @@
     <string name="cccupiedTable">está ocupada</string>
     <string name="reservedTable">está reservada</string>
     <string name="conexionError">No tienes conexión</string>
+    <string name="total">Total:</string>
+    <string name="euro">€</string>
 
 </resources>

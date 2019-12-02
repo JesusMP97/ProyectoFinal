@@ -26,6 +26,7 @@ import java.util.Locale;
 
 public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.ItemHolder> {
 
+    private static final String PRICE_FORMAT = "%.2f";
     private List<Contenedor.CommandDetail> commands;
     private Context context;
     private LayoutInflater inflater;
@@ -51,17 +52,23 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
             final Producto currentProduct = current.getProduct();
             holder.tvCommandItemName.setText(currentProduct.getNombre());
             holder.tvCommandItemAmount.setText(String.valueOf(currentCommand.getUnidades()));
-            holder.tvCommandItemPrice.setText(String.format(Locale.GERMAN, "%.2f", currentCommand.getPrecio()));
+            holder.tvCommandItemPrice.setText(String.format(Locale.GERMAN, PRICE_FORMAT, currentCommand.getPrecio()));
             holder.tvCommandItemLess.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    onClickListener.onItemClick(current,v);
                 }
             });
             holder.tvCommandItemMore.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    onClickListener.onItemClick(current,v);
+                }
+            });
+            holder.tvCommandItemClear.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickListener.onItemClick(current,v);
                 }
             });
         }
@@ -99,11 +106,11 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
     }
 
     public interface OnClickListener {
-        void onItemClick(Contenedor.CommandDetail commands);
+        void onItemClick(Contenedor.CommandDetail commands, View v);
     }
 
     public class ItemHolder extends RecyclerView.ViewHolder {
-        private TextView tvCommandItemName, tvCommandItemPrice, tvCommandItemAmount, tvCommandItemLess, tvCommandItemMore;
+        private TextView tvCommandItemName, tvCommandItemPrice, tvCommandItemAmount, tvCommandItemLess, tvCommandItemClear, tvCommandItemMore;
 
         public ItemHolder(@NonNull View itemView) {
             super(itemView);
@@ -111,6 +118,7 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
             tvCommandItemPrice = itemView.findViewById(R.id.tvCommandItemPrice);
             tvCommandItemAmount = itemView.findViewById(R.id.tvCommandItemAmount);
             tvCommandItemLess = itemView.findViewById(R.id.tvCommandItemLess);
+            tvCommandItemClear = itemView.findViewById(R.id.tvCommandItemClear);
             tvCommandItemMore = itemView.findViewById(R.id.tvCommandItemMore);
         }
     }

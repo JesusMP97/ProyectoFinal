@@ -23,6 +23,7 @@
 
     <TextView
         android:id="@+id/tvProductItemName"
+        style="@style/PurpleTheme.ItemTextViewCondenseMediumFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -33,6 +34,7 @@
 
     <TextView
         android:id="@+id/tvProductItemPrice"
+        style="@style/PurpleTheme.ItemTextViewCondenseMediumFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"

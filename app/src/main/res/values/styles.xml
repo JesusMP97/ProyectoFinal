@@ -74,6 +74,21 @@
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
+    <style name="PurpleTheme.ItemTextViewMediumFontHigher">
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="PurpleTheme.ItemTextViewCondenseFont">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+    </style>
+    <style name="PurpleTheme.ItemTextViewCondenseMediumFont">
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-condensed-medium</item>
+    </style>
+    <style name="PurpleTheme.ItemTextViewLightFont">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
     <style name="PurpleTheme.Actionmode" parent="@style/Widget.AppCompat.ActionMode">
         <item name="background">@color/darkPurple</item>
     </style>
