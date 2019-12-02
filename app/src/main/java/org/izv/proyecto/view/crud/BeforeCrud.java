@@ -1,4 +1,4 @@
-package org.izv.proyecto.view.utils;
+package org.izv.proyecto.view.crud;
 
 import org.izv.proyecto.model.data.Contenedor;
 

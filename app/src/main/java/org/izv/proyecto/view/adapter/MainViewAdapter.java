@@ -1,5 +1,6 @@
 package org.izv.proyecto.view.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -30,6 +31,7 @@ import java.util.List;
 
 public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHolder> implements Filterable {
 
+    private static final long LAST_TABLE_POSITION = 15;
     private Context context;
     private OnCreateContextMenuListener contextMenuListener;
     private int currentSelectedPos;
@@ -59,18 +61,21 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         return new ItemHolder(inflater.inflate(R.layout.invoice_item, parent, false));
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull final ItemHolder holder, final int position) {
-        if (invoices != null) {
+        if (invoices != null && tables != null) {
             Factura current = invoices.get(position);
             holder.bind(current);
-
-            holder.tvItemDestination.setText(position+"");
-            holder.tvItemTotalClients.setText("Clientes totales" + position);
-            holder.tvItemCommandNumber.setText(position + "");
-            holder.tvItemStartupEmployee.setText(String.valueOf(current.getIdempleadoinicio()));
+            if (current.getIdmesa() <= LAST_TABLE_POSITION) {
+                holder.tvItemDestination.setText(context.getString(R.string.table) + " " + current.getIdmesa());
+            } else {
+                holder.tvItemDestination.setText(context.getString(R.string.bar) + " " + current.getIdmesa());
+            }
+            long clients = getTableCapacity(current);
+            holder.tvItemTotalClients.setText(context.getString(R.string.totalClients) + " " + clients);
             holder.tvItemStartUpTime.setText(current.getHorainicio());
-            holder.tvItemTotalPrice.setText(String.valueOf(current.getTotal()));
+            holder.tvItemTotalPrice.setText(context.getString(R.string.totalPrice) + " " + current.getTotal() + context.getString(R.string.euro));
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -97,6 +102,16 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             //holder.tvTableNumber.setText("No user available");
         }
         if (currentSelectedPos == position) currentSelectedPos = -1;
+    }
+
+    public long getTableCapacity(Factura current) {
+        long clients = 0;
+        for (Mesa table : tables) {
+            if (table.getId() == current.getIdmesa()) {
+                clients = table.getCapacidad();
+            }
+        }
+        return clients;
     }
 
     @Override
@@ -175,7 +190,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
     public class ItemHolder extends RecyclerView.ViewHolder {
         private ConstraintLayout clItem;
         private LinearLayout lyItem;
-        private TextView tvItemDestination, tvItemDestinationImg, tvItemDestinationBackground, tvItemMenu, tvItemCommandNumber, tvItemTotalClients, tvItemStartupEmployee, tvItemStartUpTime, tvItemTotalPrice;
+        private TextView tvItemDestination, tvItemDestinationImg, tvItemDestinationBackground, tvItemMenu, tvItemCommandNumber, tvItemTotalClients, tvItemStartUpTime, tvItemTotalPrice;
 
         public ItemHolder(@NonNull View itemView) {
             super(itemView);
@@ -184,7 +199,6 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             tvItemDestinationBackground = itemView.findViewById(R.id.tvItemDestinationBackground);
             tvItemMenu = itemView.findViewById(R.id.tvItemMenu);
             tvItemCommandNumber = itemView.findViewById(R.id.tvItemCommandNumber);
-            tvItemStartupEmployee = itemView.findViewById(R.id.tvItemDestination);
             tvItemStartUpTime = itemView.findViewById(R.id.tvItemStartUpTime);
             tvItemTotalClients = itemView.findViewById(R.id.tvItemTotalClients);
             tvItemTotalPrice = itemView.findViewById(R.id.tvItemTotalPrice);

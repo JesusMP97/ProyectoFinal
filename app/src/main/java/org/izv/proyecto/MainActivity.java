@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(List<Mesa> mesas) {
                 tableList = mesas;
+                adapter.setTables(mesas);
             }
         });
         viewModel.getLiveInvoices().observe(this, new Observer<List<Factura>>() {
@@ -486,7 +487,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MainActivity setSupportActionBarValues() {
         setSupportActionBar(tb);
-        getSupportActionBar().setTitle(getString(R.string.tbMainTitle));
+        getSupportActionBar().setTitle(getString(R.string.tbInvoicesTitle));
         return this;
     }
 

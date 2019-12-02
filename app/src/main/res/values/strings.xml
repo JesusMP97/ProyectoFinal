@@ -52,5 +52,9 @@
     <string name="conexionError">No tienes conexión</string>
     <string name="total">Total:</string>
     <string name="euro">€</string>
+    <string name="bar">Barra</string>
+    <string name="tbInvoicesTitle">Facturas</string>
+    <string name="totalClients">Clientes totales:</string>
+    <string name="totalPrice">Precio total:</string>
 
 </resources>

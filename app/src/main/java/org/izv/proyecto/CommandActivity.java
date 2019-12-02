@@ -35,7 +35,7 @@ import org.izv.proyecto.view.adapter.CommandViewAdapter;
 import org.izv.proyecto.view.adapter.ProductViewAdapter;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.CommandViewModel;
-import org.izv.proyecto.view.utils.BeforeCrud;
+import org.izv.proyecto.view.crud.BeforeCrud;
 import org.izv.proyecto.view.utils.IO;
 
 import java.util.ArrayList;
@@ -52,6 +52,7 @@ public class CommandActivity extends AppCompatActivity {
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
+    private static final float KEY_DEFAULT_PRICE = 0;
     private static final String KEY_DEFAULT_VALUE = "0";
     private static final String KEY_INVOICE = "invoice";
     private static final String KEY_INVOICE_ID = "invoiceId";
@@ -194,6 +195,11 @@ public class CommandActivity extends AppCompatActivity {
                 if (commandDetail != null && !commandDetail.isEmpty()) {
                     Intent intent = getIntent();
                     Factura invoice = (Factura) intent.getSerializableExtra(KEY_INVOICE);
+                    float total = KEY_DEFAULT_PRICE;
+                    for (Contenedor.CommandDetail command : commandDetail) {
+                        total += command.getCommand().getPrecio();
+                    }
+                    invoice.setTotal(total);
                     Mesa table = (Mesa) intent.getSerializableExtra(KEY_TABLE);
                     table.setEstado(OCCUPIED_TABLE);
                     viewModel.update(table);
@@ -219,7 +225,7 @@ public class CommandActivity extends AppCompatActivity {
         commandAdapter.setOnClickListener(new CommandViewAdapter.OnClickListener() {
             @Override
             public void onItemClick(Contenedor.CommandDetail current, View view) {
-                findSelectedView(view.getId(), current);
+                doTheAppropriateOperation(view.getId(), current);
             }
         });
         return this;
@@ -234,7 +240,7 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    private CommandActivity findSelectedView(int id, Contenedor.CommandDetail commands) {
+    private CommandActivity doTheAppropriateOperation(int id, Contenedor.CommandDetail commands) {
         switch (id) {
             case R.id.tvCommandItemMore:
                 crud(commands, new BeforeCrud() {
