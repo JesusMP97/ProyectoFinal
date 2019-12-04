@@ -2,7 +2,6 @@ package org.izv.proyecto.view.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -17,13 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.izv.proyecto.MainActivity;
 import org.izv.proyecto.R;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.view.utils.CustomAnimation;
 import org.izv.proyecto.view.utils.CustomShape;
-import org.izv.proyecto.view.utils.Time;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +64,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         if (invoices != null && tables != null) {
             Factura current = invoices.get(position);
             holder.bind(current);
+            holder.tvItemPlace.setText("Zona: Exterior");
             if (current.getIdmesa() <= LAST_TABLE_POSITION) {
                 holder.tvItemDestination.setText(context.getString(R.string.table) + " " + current.getIdmesa());
             } else {
@@ -158,6 +156,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
 
     public void setTables(List<Mesa> tables) {
         this.tables = tables;
+        notifyDataSetChanged();
 
     }
 
@@ -190,7 +189,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
     public class ItemHolder extends RecyclerView.ViewHolder {
         private ConstraintLayout clItem;
         private LinearLayout lyItem;
-        private TextView tvItemDestination, tvItemDestinationImg, tvItemDestinationBackground, tvItemMenu, tvItemCommandNumber, tvItemTotalClients, tvItemStartUpTime, tvItemTotalPrice;
+        private TextView tvItemDestination, tvItemDestinationImg, tvItemDestinationBackground, tvItemMenu, tvItemPlace, tvItemTotalClients, tvItemStartUpTime, tvItemTotalPrice;
 
         public ItemHolder(@NonNull View itemView) {
             super(itemView);
@@ -198,7 +197,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             tvItemDestinationImg = itemView.findViewById(R.id.tvItemDestinationImg);
             tvItemDestinationBackground = itemView.findViewById(R.id.tvItemDestinationBackground);
             tvItemMenu = itemView.findViewById(R.id.tvItemMenu);
-            tvItemCommandNumber = itemView.findViewById(R.id.tvItemCommandNumber);
+            tvItemPlace = itemView.findViewById(R.id.tvItemPlace);
             tvItemStartUpTime = itemView.findViewById(R.id.tvItemStartUpTime);
             tvItemTotalClients = itemView.findViewById(R.id.tvItemTotalClients);
             tvItemTotalPrice = itemView.findViewById(R.id.tvItemTotalPrice);

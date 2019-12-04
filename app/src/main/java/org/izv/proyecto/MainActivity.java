@@ -44,6 +44,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xyz";
     private ActionMode actionMode;
     private MainViewAdapter adapter;
-    private AlertDialog alertDialog;
+    private AlertDialog mapDialog, loadingDialog;
     private SubActionButton btLogOut, btProfile, btSettings;
     private Mesa current;
     private FloatingActionButton fab;
@@ -82,15 +84,21 @@ public class MainActivity extends AppCompatActivity {
     private MainViewModel viewModel;
     private List<Mesa> tableList;
     private Bundle savedInstanceState;
+    private boolean tablesChanged, invoicesChanged, changedActivity;
+    private int cont = 0;
+    private Timer timer;
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == KEY_MAIN_INTENT) {
             if (resultCode == Activity.RESULT_OK) {
-                if (alertDialog != null) {
-                    alertDialog.cancel();
+                if (mapDialog != null) {
+                    mapDialog.cancel();
                 }
+                changedActivity = true;
+                Log.v("xyz", " CAMBIA");
                 recreate();
             }
         }
@@ -106,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         this.savedInstanceState = savedInstanceState;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
@@ -114,7 +122,40 @@ public class MainActivity extends AppCompatActivity {
                 .initFabComponents()
                 .setSupportActionBarValues()
                 .assignEvents()
-                .setSavedInstanceValues(savedInstanceState);
+                .setSavedInstanceValues();
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        final ImageView view = loadingDialog.findViewById(R.id.ivCharging);
+
+        timer = new Timer();
+        final TypedArray loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (cont < loadingBg.length()) {
+                    view.setImageDrawable(loadingBg.getDrawable(cont));
+                } else {
+                    cont = 0;
+                }
+                if (invoicesChanged && tablesChanged) {
+                    timer.cancel();
+                    loadingDialog.cancel();
+                }
+                if (savedInstanceState != null && invoicesChanged) {
+                    timer.cancel();
+                    loadingDialog.cancel();
+                }
+                Log.v("xyz",cont+"");
+                cont++;
+            }
+        };
+        timer.schedule(timerTask, 0, 1);
     }
 
     @Override
@@ -123,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
         if (actionMode != null) {
             outState.putSerializable(KEY_ACTION_MODE, (Serializable) list);
         }
+        outState.putBoolean("ACTIVITY", changedActivity);
         super.onSaveInstanceState(outState);
     }
 
@@ -182,11 +224,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MainActivity assignEvents() {
+        Log.v("xyz", " ENTRA ASSIGN" + changedActivity);
         viewModel.getLiveTables().observe(this, new Observer<List<Mesa>>() {
             @Override
             public void onChanged(List<Mesa> mesas) {
                 tableList = mesas;
                 adapter.setTables(mesas);
+                tablesChanged = true;
             }
         });
         viewModel.getLiveInvoices().observe(this, new Observer<List<Factura>>() {
@@ -197,6 +241,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (savedInstanceState == null) {
                     adapter.setData(facturas);
+                    invoicesChanged = true;
+                }
+                if (savedInstanceState != null && savedInstanceState.getBoolean("ACTIVITY")) {
+                    Log.v("xyz","entra en save");
+                    invoicesChanged = true;
                 }
             }
         });
@@ -273,8 +322,8 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.map, null);
         dialogBuilder.setView(dialogView);
-        alertDialog = dialogBuilder.create();
-        alertDialog.show();
+        mapDialog = dialogBuilder.create();
+        mapDialog.show();
         return this;
     }
 
@@ -341,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MainActivity findMapViewById(ImageView view, int id) {
-        view = alertDialog.findViewById(id);
+        view = mapDialog.findViewById(id);
         setSelectedTableValues(view);
         tables.add(view);
         return this;
@@ -462,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressWarnings("unchecked")
-    private MainActivity setSavedInstanceValues(Bundle savedInstanceState) {
+    private MainActivity setSavedInstanceValues() {
         if (savedInstanceState != null && savedInstanceState.getSerializable(KEY_ACTION_MODE) != null) {
             List<Factura> list = (List<Factura>) savedInstanceState.getSerializable(KEY_ACTION_MODE);
             adapter.setData(list);

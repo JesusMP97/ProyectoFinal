@@ -36,4 +36,12 @@
         <item>@drawable/silla</item>
         <item>@drawable/silla_ocupada</item>
     </array>
+    <array name="loading_background">
+        <item>@drawable/loading_first</item>
+        <item>@drawable/loading_second</item>
+        <item>@drawable/loading_third</item>
+        <item>@drawable/loading_fourth</item>
+        <item>@drawable/loading_fifth</item>
+        <item>@drawable/loading_sixth</item>
+    </array>
 </resources>

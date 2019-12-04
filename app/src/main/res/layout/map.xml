@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/plano_restaurante"
     tools:context=".MainActivity">
 
@@ -69,9 +69,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:layout_marginBottom="8dp"
         android:contentDescription="6"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/ivDoubleTable5"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
@@ -231,12 +230,5 @@
         app:layout_constraintBottom_toTopOf="@+id/ivBar3"
         app:layout_constraintStart_toStartOf="@+id/ivBar4"
         app:srcCompat="@drawable/silla" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_begin="335dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

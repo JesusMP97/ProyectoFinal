@@ -86,11 +86,11 @@
         </FrameLayout>
 
         <TextView
-            android:id="@+id/tvItemCommandNumber"
+            android:id="@+id/tvItemPlace"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="prueba"
+            android:text="@string/totalClients"
             app:layout_constraintBottom_toTopOf="@+id/tvItemTotalClients"
             app:layout_constraintStart_toEndOf="@+id/fl"
             app:layout_constraintTop_toBottomOf="@+id/lyItem" />
@@ -100,17 +100,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="prueba"
+            android:text="@string/totalClients"
             app:layout_constraintBottom_toTopOf="@+id/tvItemTotalPrice"
             app:layout_constraintStart_toEndOf="@+id/fl"
-            app:layout_constraintTop_toBottomOf="@+id/tvItemCommandNumber" />
+            app:layout_constraintTop_toBottomOf="@+id/tvItemPlace" />
 
         <TextView
             android:id="@+id/tvItemTotalPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="prueba"
+            android:text="@string/totalPrice"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/fl"
             app:layout_constraintTop_toBottomOf="@+id/tvItemTotalClients" />
