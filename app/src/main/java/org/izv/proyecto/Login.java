@@ -29,6 +29,7 @@ import org.izv.circularfloatingbutton.FloatingActionButton;
 import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
 import org.izv.proyecto.model.data.Empleado;
+import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.LoginViewModel;
 import org.izv.proyecto.view.model.MainViewModel;
@@ -59,6 +60,7 @@ public class Login extends AppCompatActivity {
     private TextView tvUserName, tvPassword, tvLogin;
     private String url;
     private LoginViewModel viewModel;
+    private String conexionError;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -76,7 +78,7 @@ public class Login extends AppCompatActivity {
         String url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
         if (!this.url.equalsIgnoreCase(url)) {
             viewModel.setUrl(url);
-            viewModel.getLiveEmployeeList().observe(this, new Observer<List<Empleado>>() {
+            viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
                 @Override
                 public void onChanged(List<Empleado> empleados) {
                     employees = empleados;
@@ -121,10 +123,25 @@ public class Login extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        viewModel.getLiveEmployeeList().observe(this, new Observer<List<Empleado>>() {
+        viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
             @Override
             public void onChanged(List<Empleado> empleados) {
                 employees = empleados;
+            }
+        });
+        viewModel.setOnFailureListener(new Repository.OnFailureListener() {
+            @Override
+            public void onGeneralFailure(String error) {
+                Log.v("xyz", "entra");
+                conexionError = error;
+                //Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onConexionFailure(String error) {
+                Log.v("xyz", error);
+                conexionError = error;
+                //Toast.makeText(Login.this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
             }
         });
         etUserName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -271,14 +288,9 @@ public class Login extends AppCompatActivity {
             Toast.makeText(this, getString(R.string.welcome) + " " + current.getLogin(), Toast.LENGTH_SHORT).show();
             startActivity();
         } else {
-            if (employees != null) {
-                setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
-                        .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
-            } else {
-                Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
-                ilPassword.setError(null);
-                ilUserName.setError(null);
-            }
+            setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
+                    .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
+            checkConexion();
         }
         return this;
     }
@@ -347,6 +359,13 @@ public class Login extends AppCompatActivity {
             findAdecuateError(et, il, getString(R.string.etInvalidUserNameError), getString(R.string.etInvalidPasswordError));
             et.setHint("");
             tv.setVisibility(View.VISIBLE);
+        }
+        return this;
+    }
+
+    private Login checkConexion() {
+        if (conexionError != null && !etUserName.getText().toString().isEmpty() && !etPassword.getText().toString().isEmpty()) {
+            Toast.makeText(Login.this, conexionError, Toast.LENGTH_SHORT).show();
         }
         return this;
     }

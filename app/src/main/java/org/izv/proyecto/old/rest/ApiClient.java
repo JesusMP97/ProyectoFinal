@@ -1,4 +1,4 @@
-package org.izv.proyecto.model.rest;
+package org.izv.proyecto.old.rest;
 
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Empleado;

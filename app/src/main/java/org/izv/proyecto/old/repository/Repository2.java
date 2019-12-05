@@ -1,0 +1,56 @@
+package org.izv.proyecto.old.repository;
+
+import androidx.lifecycle.MutableLiveData;
+
+import java.io.File;
+import java.util.List;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class Repository2 {
+    private Retrofit retrofit;
+
+    protected Repository2(String url) {
+        retrieveApiClient(url);
+    }
+
+    protected void retrieveApiClient(String url) {
+//        Gson gson = new GsonBuilder()
+//                .setLenient()
+//                .create();
+        retrofit = new Retrofit.Builder()
+                .baseUrl("http://" + url + "/web/ProyectoFinal/public/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+
+    protected void setUrl(String url) {
+        retrieveApiClient(url);
+    }
+
+    protected Retrofit getRetrofit() {
+        return retrofit;
+    }
+
+
+    public interface Data<T> {
+        void add(T object);
+
+        void delete(T object);
+
+        void fetchAll();
+
+        MutableLiveData<List<T>> getAll();
+
+        void update(T object);
+
+        void upload(File file);
+    }
+
+    public interface OnFailureListener {
+        void onGeneralFailure(String error);
+
+        void onConexionFailure(String error);
+    }
+}

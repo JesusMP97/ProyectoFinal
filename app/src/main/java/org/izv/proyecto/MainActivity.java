@@ -34,6 +34,7 @@ import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
+import org.izv.proyecto.model.repository.InvoiceRepository;
 import org.izv.proyecto.view.adapter.MainViewAdapter;
 import org.izv.proyecto.view.model.MainViewModel;
 import org.izv.proyecto.view.utils.IO;
@@ -109,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         String url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
         if (!this.url.equalsIgnoreCase(url)) {
-            viewModel.setUrl(url);
+            viewModel.invoiceViewModel.setUrl(url);
+            viewModel.tableViewModel.setUrl(url);
         }
     }
 
@@ -143,15 +145,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     cont = 0;
                 }
-                if (invoicesChanged && tablesChanged) {
+                if (savedInstanceState == null) {
                     timer.cancel();
                     loadingDialog.cancel();
                 }
-                if (savedInstanceState != null && invoicesChanged) {
+                if (savedInstanceState != null && invoicesChanged && tablesChanged) {
                     timer.cancel();
                     loadingDialog.cancel();
                 }
-                Log.v("xyz",cont+"");
+                Log.v("xyz", cont + "");
                 cont++;
             }
         };
@@ -225,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MainActivity assignEvents() {
         Log.v("xyz", " ENTRA ASSIGN" + changedActivity);
-        viewModel.getLiveTables().observe(this, new Observer<List<Mesa>>() {
+        viewModel.tableViewModel.getAll().observe(this, new Observer<List<Mesa>>() {
             @Override
             public void onChanged(List<Mesa> mesas) {
                 tableList = mesas;
@@ -233,9 +235,10 @@ public class MainActivity extends AppCompatActivity {
                 tablesChanged = true;
             }
         });
-        viewModel.getLiveInvoices().observe(this, new Observer<List<Factura>>() {
+        viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
             @Override
             public void onChanged(List<Factura> facturas) {
+                Log.v("zzyy", facturas.size() + "FACTURAS");
                 if (savedInstanceState != null && savedInstanceState.getSerializable(KEY_ACTION_MODE) == null) {
                     adapter.setData(facturas);
                 }
@@ -244,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
                     invoicesChanged = true;
                 }
                 if (savedInstanceState != null && savedInstanceState.getBoolean("ACTIVITY")) {
-                    Log.v("xyz","entra en save");
                     invoicesChanged = true;
                 }
             }

@@ -1,46 +1,95 @@
 package org.izv.proyecto.view.model;
 
 import android.app.Application;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 
-import org.izv.proyecto.model.Repository;
-import org.izv.proyecto.model.data.Empleado;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
-import org.izv.proyecto.model.data.Producto;
+import org.izv.proyecto.model.repository.InvoiceRepository;
+import org.izv.proyecto.model.repository.TableRepository;
 import org.izv.proyecto.view.utils.IO;
+import org.izv.proyecto.view.utils.Settings;
 
+import java.io.File;
 import java.util.List;
 
 public class MainViewModel extends AndroidViewModel {
 
-    private Repository repository;
-    private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
-    private static final String KEY_URL = "url";
-    private static final String KEY_DEFAULT_VALUE = "0";
+    private InvoiceRepository invoiceRepository;
+    private TableRepository tableRepository;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
-        String url = IO.readPreferences(application.getApplicationContext(), FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
-        repository = new Repository(url);
+        String url = IO.readPreferences(application.getApplicationContext(), Settings.FILE_SETTINGS, Settings.KEY_URL, Settings.KEY_DEFAULT_VALUE);
+        invoiceRepository = new InvoiceRepository(url);
+        tableRepository = new TableRepository(url);
+
     }
 
-    public MutableLiveData<List<Factura>> getLiveInvoices() {
-        return repository.getLiveInvoices();
-    }
+    public ViewModel<Factura> invoiceViewModel = new ViewModel<Factura>() {
+        @Override
+        public void add(Factura object) {
+            invoiceRepository.add(object);
+        }
 
-    public LiveData<List<Mesa>> getLiveTables() {
-        return repository.getLiveTableList();
-    }
+        @Override
+        public void delete(Factura object) {
+            invoiceRepository.delete(object);
+        }
 
-    public void setUrl(String url) {
-        repository.setUrl(url);
-    }
+        @Override
+        public void update(Factura object) {
+            invoiceRepository.update(object);
+        }
+
+        @Override
+        public void upload(File file) {
+
+        }
+
+        @Override
+        public LiveData<List<Factura>> getAll() {
+            return invoiceRepository.getAll();
+        }
+
+        @Override
+        public void setUrl(String url) {
+            invoiceRepository.setUrl(url);
+        }
+    };
+    public ViewModel<Mesa> tableViewModel = new ViewModel<Mesa>() {
+        @Override
+        public void add(Mesa object) {
+            tableRepository.add(object);
+        }
+
+        @Override
+        public void delete(Mesa object) {
+            tableRepository.delete(object);
+        }
+
+        @Override
+        public void update(Mesa object) {
+            tableRepository.update(object);
+        }
+
+        @Override
+        public void upload(File file) {
+
+        }
+
+        @Override
+        public LiveData<List<Mesa>> getAll() {
+            return tableRepository.getAll();
+        }
+
+        @Override
+        public void setUrl(String url) {
+            tableRepository.setUrl(url);
+        }
+    };
 }

@@ -1,9 +1,8 @@
-package org.izv.proyecto.model;
+package org.izv.proyecto.old.repository;
 
 
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Comanda;
@@ -11,9 +10,8 @@ import org.izv.proyecto.model.data.Empleado;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.model.data.Producto;
-import org.izv.proyecto.model.rest.ApiClient;
+import org.izv.proyecto.old.rest.ApiClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;

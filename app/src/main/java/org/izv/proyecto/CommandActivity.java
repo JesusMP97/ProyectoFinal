@@ -37,6 +37,7 @@ import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.CommandViewModel;
 import org.izv.proyecto.view.crud.BeforeCrud;
 import org.izv.proyecto.view.utils.IO;
+import org.izv.proyecto.view.utils.Settings;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -49,7 +50,6 @@ public class CommandActivity extends AppCompatActivity {
 
     public static final int OCCUPIED_TABLE = 0;
     private static final String FILE_INVOICE = "invoice";
-    private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
     private static final float KEY_DEFAULT_PRICE = 0;
@@ -57,7 +57,6 @@ public class CommandActivity extends AppCompatActivity {
     private static final String KEY_INVOICE = "invoice";
     private static final String KEY_INVOICE_ID = "invoiceId";
     private static final String KEY_TABLE = "table";
-    private static final String KEY_URL = "url";
     private static final long MIN_AMOUNT = 1;
     private static final long POST_CLOSE_SEARCH_VIEW = 300;
     private static final String PRICE_FORMAT = "%.2f";
@@ -121,9 +120,12 @@ public class CommandActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        String url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
+        String url = IO.readPreferences(this, Settings.FILE_SETTINGS, Settings.KEY_URL, KEY_DEFAULT_VALUE);
         if (!this.url.equalsIgnoreCase(url)) {
-            viewModel.setUrl(url);
+            viewModel.commandViewModel.setUrl(url);
+            viewModel.invoiceViewModel.setUrl(url);
+            viewModel.tableViewModel.setUrl(url);
+            viewModel.productoViewModel.setUrl(url);
         }
     }
 
@@ -180,7 +182,7 @@ public class CommandActivity extends AppCompatActivity {
     }
 
     private CommandActivity assignEvents() {
-        viewModel.getLiveProductsList().observe(this, new Observer<List<Producto>>() {
+        viewModel.productoViewModel.getAll().observe(this, new Observer<List<Producto>>() {
             @Override
             public void onChanged(List<Producto> products) {
                 productAdapter.setData(products);
@@ -202,10 +204,10 @@ public class CommandActivity extends AppCompatActivity {
                     invoice.setTotal(total);
                     Mesa table = (Mesa) intent.getSerializableExtra(KEY_TABLE);
                     table.setEstado(OCCUPIED_TABLE);
-                    viewModel.update(table);
-                    viewModel.add(invoice);
+                    viewModel.tableViewModel.update(table);
+                    viewModel.invoiceViewModel.add(invoice);
                     for (Contenedor.CommandDetail command : commandDetail) {
-                        viewModel.add(command.getCommand());
+                        viewModel.commandViewModel.add(command.getCommand());
                     }
                     setResult(RESULT_OK);
                     finish();
@@ -376,7 +378,7 @@ public class CommandActivity extends AppCompatActivity {
         viewModel = ViewModelProviders.of(this).get(CommandViewModel.class);
         rvProductList.setAdapter(productAdapter);
         rvCommandList.setAdapter(commandAdapter);
-        url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
+        url = IO.readPreferences(this, Settings.FILE_SETTINGS, Settings.KEY_URL, Settings.KEY_DEFAULT_VALUE);
         return this;
     }
 
