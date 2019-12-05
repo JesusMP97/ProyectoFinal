@@ -1,5 +1,6 @@
 package org.izv.proyecto;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
@@ -8,10 +9,12 @@ import androidx.lifecycle.ViewModelProviders;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -36,6 +39,8 @@ import org.izv.proyecto.view.model.MainViewModel;
 import org.izv.proyecto.view.utils.IO;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Login extends AppCompatActivity {
     public static final String FILE_LOGIN = "login";
@@ -60,7 +65,51 @@ public class Login extends AppCompatActivity {
     private TextView tvUserName, tvPassword, tvLogin;
     private String url;
     private LoginViewModel viewModel;
-    private String conexionError;
+    private int cont = 0;
+    private Timer timer;
+    private AlertDialog loadingDialog;
+    private boolean invoicesChanged;
+
+    private Login startLoadingAlert() {
+        androidx.appcompat.app.AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        final ImageView view = loadingDialog.findViewById(R.id.ivCharging);
+
+        timer = new Timer();
+        final TypedArray loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (cont < loadingBg.length()) {
+                    view.setImageDrawable(loadingBg.getDrawable(cont));
+                } else {
+                    cont = 0;
+                }
+                if (invoicesChanged) {
+                    timer.cancel();
+                    loadingDialog.cancel();
+                    tvLogin.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            initAnimations()
+                                    .showComponents();
+                        }
+                    });
+                    invoicesChanged = false;
+                }
+                cont++;
+            }
+        };
+        timer.schedule(timerTask, 0, 100);
+
+        return this;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -89,15 +138,13 @@ public class Login extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        getApplication().setTheme(R.style.Theme_MaterialComponents_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         initComponents()
-                .initFabComponents()
                 .setSavedInstanceValues(savedInstanceState)
-                .initAnimations()
-                .showComponents()
-                .assignEvents();
+                .assignEvents()
+                .startLoadingAlert();
+        //.startLoadingAlert();
     }
 
     @Override
@@ -116,32 +163,22 @@ public class Login extends AppCompatActivity {
     }
 
     private Login assignEvents() {
-        btSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Login.this, SettingsActivity.class);
-                startActivity(intent);
-            }
-        });
         viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
             @Override
             public void onChanged(List<Empleado> empleados) {
                 employees = empleados;
+                invoicesChanged = true;
             }
         });
         viewModel.setOnFailureListener(new Repository.OnFailureListener() {
             @Override
             public void onGeneralFailure(String error) {
                 Log.v("xyz", "entra");
-                conexionError = error;
-                //Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onConexionFailure(String error) {
                 Log.v("xyz", error);
-                conexionError = error;
-                //Toast.makeText(Login.this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
             }
         });
         etUserName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -191,6 +228,15 @@ public class Login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 manageCredentials();
+            }
+        });
+
+        btLogin.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(Login.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
             }
         });
         return this;
@@ -246,7 +292,6 @@ public class Login extends AppCompatActivity {
         tvLogin.startAnimation(initApp);
         tvUserName.startAnimation(initApp);
         tvPassword.startAnimation(initApp);
-        //btLogin.setForeground(getDrawable(R.drawable.ripple));
         return this;
     }
 
@@ -261,6 +306,7 @@ public class Login extends AppCompatActivity {
         tvLogin = findViewById(R.id.tvLogin);
         viewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         initApp = AnimationUtils.loadAnimation(this, R.anim.anim_alpha);
+        initApp.setDuration(100);
         url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
         return this;
     }
@@ -283,16 +329,27 @@ public class Login extends AppCompatActivity {
     }
 
     private Login manageCredentials() {
-        if (hasCredentials()) {
-            IO.savePreferences(this, FILE_LOGIN, KEY_LOGIN_ID, String.valueOf(current.getId()));
-            Toast.makeText(this, getString(R.string.welcome) + " " + current.getLogin(), Toast.LENGTH_SHORT).show();
-            startActivity();
+        if (hasConexion()) {
+            if (hasCredentials()) {
+                IO.savePreferences(this, FILE_LOGIN, KEY_LOGIN_ID, String.valueOf(current.getId()));
+                Toast.makeText(this, getString(R.string.welcome) + " " + current.getLogin(), Toast.LENGTH_SHORT).show();
+                startActivity();
+            } else {
+                setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
+                        .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
+            }
         } else {
-            setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
-                    .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
-            checkConexion();
+            Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         }
         return this;
+    }
+
+    private boolean hasConexion() {
+        boolean conexion = false;
+        if (current != null) {
+            conexion = true;
+        }
+        return conexion;
     }
 
     private Login manageFocus(final TextInputEditText currentEt, final TextView currentTv, boolean hasFocus) {
@@ -363,12 +420,6 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login checkConexion() {
-        if (conexionError != null && !etUserName.getText().toString().isEmpty() && !etPassword.getText().toString().isEmpty()) {
-            Toast.makeText(Login.this, conexionError, Toast.LENGTH_SHORT).show();
-        }
-        return this;
-    }
 
     private Login setFocusedValues(final TextInputEditText currentEt, final TextView currentTv) {
         currentEt.setBackground(getDrawable(R.drawable.et_focused_background));
