@@ -311,30 +311,44 @@ public class Login extends AppCompatActivity {
         viewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         initApp = AnimationUtils.loadAnimation(this, R.anim.anim_alpha);
         url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
+        Log.v("xyz", "asdsad" + url);
         return this;
     }
 
     private Login manageCredentials() {
-        if (hasConexion()) {
-            if (hasCredentials()) {
-                IO.savePreferences(this, FILE_LOGIN, KEY_LOGIN_ID, String.valueOf(current.getId()));
-                Toast.makeText(this, getString(R.string.welcome) + " " + current.getLogin(), Toast.LENGTH_SHORT).show();
-                startActivity();
+        if (hasIp()) {
+            if (hasConexion()) {
+                if (hasCredentials()) {
+                    IO.savePreferences(this, FILE_LOGIN, KEY_LOGIN_ID, String.valueOf(current.getId()));
+                    Toast.makeText(this, getString(R.string.welcome) + " " + current.getLogin(), Toast.LENGTH_SHORT).show();
+                    startActivity();
+                } else {
+                    setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
+                            .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
+                }
             } else {
-                setErrorValues(etUserName, ilUserName, tvUserName, current.getLogin())
-                        .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
+                etPassword.setError(null);
+                etUserName.setError(null);
+                showConexionError();
             }
         } else {
-            etPassword.setError(null);
-            etUserName.setError(null);
-            showConexionError();
+            splash.setLoading(false);
         }
         return this;
     }
 
+    private boolean hasIp() {
+        boolean ip = false;
+        Log.v("xyz", url + "");
+        if (!url.isEmpty()) {
+            ip = true;
+        }
+        return ip;
+    }
+
     private boolean hasConexion() {
         boolean conexion = false;
-        if (employees != null) {
+        if (employees != null && !employees.isEmpty()) {
             conexion = true;
         }
         return conexion;

@@ -9,6 +9,7 @@ import org.izv.proyecto.model.rest.EmployeeClient;
 
 import java.io.File;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -63,7 +64,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }
@@ -85,7 +86,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }
@@ -105,7 +106,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
             @Override
             public void onFailure(Call<List<Empleado>> call, Throwable t) {
                 all = new MutableLiveData<>();
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException || t instanceof UnknownHostException) {
                     onFailureListener.onConnectionFailure();
                 }
             }
@@ -133,7 +134,8 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                Log.v("abc",  t.getMessage());
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }

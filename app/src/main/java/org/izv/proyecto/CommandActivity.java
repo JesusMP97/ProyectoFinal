@@ -301,7 +301,9 @@ public class CommandActivity extends AppCompatActivity {
                         viewModel.commandViewModel.add(command.getCommand());
                     }
                     setResult(RESULT_OK);
-                    finish();
+                    //finish();
+                    Intent intent1 = new Intent(CommandActivity.this, MainActivity.class);
+                    startActivity(intent1);
                 } else {
                     Toast.makeText(CommandActivity.this, getString(R.string.unselectedProduct), Toast.LENGTH_SHORT).show();
                 }

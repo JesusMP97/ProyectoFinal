@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mapDialog != null) {
                     mapDialog.cancel();
                 }
-                recreate();
+                //recreate();
             }
         }
     }

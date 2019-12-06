@@ -128,10 +128,12 @@ public class InvoiceRepository implements Repository.Data<Factura> {
         call.enqueue(new Callback<Long>() {
             @Override
             public void onResponse(Call<Long> call, Response<Long> response) {
-                long result = response.body();
-                Log.v(TAG, String.valueOf(result));
-                if (result > EMPTY) {
-                    fetchAll();
+                if (response.body() != null) {
+                    long result = response.body();
+                    Log.v(TAG, String.valueOf(result));
+                    if (result > EMPTY) {
+                        fetchAll();
+                    }
                 }
             }
 
