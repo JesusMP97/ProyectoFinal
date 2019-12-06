@@ -183,7 +183,7 @@ public class CommandActivity extends AppCompatActivity {
 
     public CommandActivity createInvoice() {
         long idEmp = Long.parseLong(IO.readPreferences(this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, KEY_DEFAULT_VALUE));
-        Mesa table = (Mesa) getIntent().getSerializableExtra(KEY_TABLE);
+        Mesa table = getIntent().getParcelableExtra(KEY_TABLE);
         invoice = new Factura()
                 .setIdempleadoinicio(idEmp)
                 .setIdempleadocierre(idEmp)
@@ -293,7 +293,7 @@ public class CommandActivity extends AppCompatActivity {
                     invoice.setHoracierre("");
                     viewModel.invoiceViewModel.update(invoice);
                     Log.v("xyz", invoice.toString());
-                    Mesa table = (Mesa) intent.getSerializableExtra(KEY_TABLE);
+                    Mesa table = intent.getParcelableExtra(KEY_TABLE);
                     table.setEstado(OCCUPIED_TABLE);
                     Log.v("coommand", table.toString());
                     viewModel.tableViewModel.update(table);
@@ -301,9 +301,7 @@ public class CommandActivity extends AppCompatActivity {
                         viewModel.commandViewModel.add(command.getCommand());
                     }
                     setResult(RESULT_OK);
-                    //finish();
-                    Intent intent1 = new Intent(CommandActivity.this, MainActivity.class);
-                    startActivity(intent1);
+                    finish();
                 } else {
                     Toast.makeText(CommandActivity.this, getString(R.string.unselectedProduct), Toast.LENGTH_SHORT).show();
                 }

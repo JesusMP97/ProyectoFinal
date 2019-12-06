@@ -339,7 +339,6 @@ public class Login extends AppCompatActivity {
 
     private boolean hasIp() {
         boolean ip = false;
-        Log.v("xyz", url + "");
         if (!url.isEmpty()) {
             ip = true;
         }

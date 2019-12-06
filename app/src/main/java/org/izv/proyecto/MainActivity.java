@@ -15,6 +15,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mapDialog != null) {
                     mapDialog.cancel();
                 }
-                //recreate();
+                recreate();
             }
         }
     }
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         List<Factura> list = adapter.getInvoices();
         if (actionMode != null) {
-            outState.putSerializable(KEY_ACTION_MODE, (Serializable) list);
+            outState.putParcelableArrayList(KEY_ACTION_MODE, (ArrayList<? extends Parcelable>) list);
         }
         super.onSaveInstanceState(outState);
     }
@@ -238,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             public void onChanged(List<Mesa> mesas) {
                 adapter.setTables(mesas);
                 splash.setLoading(false);
-                if(mesas != null){
+                if (mesas != null) {
                     tableList = mesas;
                     fab.setEnabled(true);
                 }
@@ -247,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
             @Override
             public void onChanged(List<Factura> facturas) {
-                if (savedInstanceState != null && savedInstanceState.getSerializable(KEY_ACTION_MODE) == null) {
+                if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) == null) {
                     adapter.setData(facturas);
                 }
                 if (savedInstanceState == null) {
@@ -523,8 +524,8 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressWarnings("unchecked")
     private MainActivity setSavedInstanceValues() {
-        if (savedInstanceState != null && savedInstanceState.getSerializable(KEY_ACTION_MODE) != null) {
-            List<Factura> list = (List<Factura>) savedInstanceState.getSerializable(KEY_ACTION_MODE);
+        if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) != null) {
+            List<Factura> list = savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE);
             adapter.setData(list);
             for (int i = 0; i < list.size(); i++) {
                 if (list.get(i).isSelected()) {
@@ -537,13 +538,13 @@ public class MainActivity extends AppCompatActivity {
 
     public MainActivity setSelectedTableValues(ImageView view) {
         long tableId = Long.parseLong(view.getContentDescription().toString());
-            for (Mesa table : tableList) {
-                if (table.getId() == tableId) {
-                    int capacity = (int) table.getCapacidad();
-                    int state = (int) table.getEstado();
-                    setTableBg(state, view, capacity, tableId);
-                }
+        for (Mesa table : tableList) {
+            if (table.getId() == tableId) {
+                int capacity = (int) table.getCapacidad();
+                int state = (int) table.getEstado();
+                setTableBg(state, view, capacity, tableId);
             }
+        }
         return this;
     }
 
@@ -574,8 +575,8 @@ public class MainActivity extends AppCompatActivity {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE, (Serializable) invoice)
-                .putExtra(KEY_TABLE, (Serializable) current);
+                .putExtra(KEY_INVOICE,  invoice)
+                .putExtra(KEY_TABLE, current);
         startActivity(intent);
         return this;
     }
@@ -585,8 +586,8 @@ public class MainActivity extends AppCompatActivity {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE, (Serializable) invoice)
-                .putExtra(KEY_TABLE, (Serializable) current);
+                .putExtra(KEY_INVOICE,  invoice)
+                .putExtra(KEY_TABLE,  current);
         startActivityForResult(intent, KEY_MAIN_INTENT);
         return this;
     }
