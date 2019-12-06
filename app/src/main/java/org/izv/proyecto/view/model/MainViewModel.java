@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.model.repository.InvoiceRepository;
+import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.model.repository.TableRepository;
 import org.izv.proyecto.view.utils.IO;
 import org.izv.proyecto.view.utils.Settings;
@@ -28,6 +29,11 @@ public class MainViewModel extends AndroidViewModel {
         invoiceRepository = new InvoiceRepository(url);
         tableRepository = new TableRepository(url);
 
+    }
+
+    public void setOnFailureListener(Repository.OnFailureListener onInvoiceFailureListener, Repository.OnFailureListener onTableFailureListener) {
+        invoiceRepository.setOnFailureListener(onInvoiceFailureListener);
+        tableRepository.setOnFailureListener(onTableFailureListener);
     }
 
     public ViewModel<Factura> invoiceViewModel = new ViewModel<Factura>() {

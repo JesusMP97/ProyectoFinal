@@ -1,5 +1,6 @@
 package org.izv.proyecto;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -10,7 +11,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -36,6 +39,8 @@ import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.LoginViewModel;
 import org.izv.proyecto.view.model.MainViewModel;
+import org.izv.proyecto.view.splash.OnSplash;
+import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
 
 import java.util.List;
@@ -58,6 +63,7 @@ public class Login extends AppCompatActivity {
     private Empleado current = new Empleado();
     private int currentPasswordSize;
     private List<Empleado> employees;
+    private boolean loading = true;
     private TextInputEditText etUserName, etPassword;
     private FloatingActionButton fab;
     private TextInputLayout ilUserName, ilPassword;
@@ -65,49 +71,43 @@ public class Login extends AppCompatActivity {
     private TextView tvUserName, tvPassword, tvLogin;
     private String url;
     private LoginViewModel viewModel;
-    private int cont = 0;
-    private Timer timer;
     private AlertDialog loadingDialog;
-    private boolean invoicesChanged;
+    private ImageView ivLoading;
+    private Splash splash;
+    private TypedArray loadingBg;
 
-    private Login startLoadingAlert() {
-        androidx.appcompat.app.AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+    @Override
+    protected void onStop() {
+        splash.setLoading(false);
+        super.onStop();
+    }
+
+    private Login initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.charging, null);
         dialogBuilder.setView(dialogView);
         loadingDialog = dialogBuilder.create();
         loadingDialog.show();
         loadingDialog.setCancelable(false);
-        final ImageView view = loadingDialog.findViewById(R.id.ivCharging);
-
-        timer = new Timer();
-        final TypedArray loadingBg = getResources().obtainTypedArray(R.array.loading_background);
-
-        TimerTask timerTask = new TimerTask() {
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
             @Override
-            public void run() {
-                if (cont < loadingBg.length()) {
-                    view.setImageDrawable(loadingBg.getDrawable(cont));
-                } else {
-                    cont = 0;
-                }
-                if (invoicesChanged) {
-                    timer.cancel();
-                    loadingDialog.cancel();
-                    tvLogin.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            initAnimations()
-                                    .showComponents();
-                        }
-                    });
-                    invoicesChanged = false;
-                }
-                cont++;
+            public void onFinished() {
+                afterSplash();
             }
-        };
-        timer.schedule(timerTask, 0, 100);
+        });
+        splash.execute();
+        return this;
+    }
 
+    private Login afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
+            initAnimations()
+                    .showComponents();
+        }
         return this;
     }
 
@@ -127,9 +127,11 @@ public class Login extends AppCompatActivity {
         String url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
         if (!this.url.equalsIgnoreCase(url)) {
             viewModel.setUrl(url);
+            initLoadingAlertDialogComponents();
             viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
                 @Override
                 public void onChanged(List<Empleado> empleados) {
+                    splash.setLoading(false);
                     employees = empleados;
                 }
             });
@@ -143,16 +145,16 @@ public class Login extends AppCompatActivity {
         initComponents()
                 .setSavedInstanceValues(savedInstanceState)
                 .assignEvents()
-                .startLoadingAlert();
-        //.startLoadingAlert();
+                .initLoadingAlertDialogComponents();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
         outState.putString(SAVED_USER_NAME, etUserName.getText().toString());
         outState.putString(SAVED_PASSWORD, etPassword.getText().toString());
-        super.onSaveInstanceState(outState);
     }
+
 
     private Login adjustUserNameValues(CharSequence s) {
         if (etPassword.hasFocus() && s.length() == 0) {
@@ -166,19 +168,16 @@ public class Login extends AppCompatActivity {
         viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
             @Override
             public void onChanged(List<Empleado> empleados) {
+                splash.setLoading(false);
                 employees = empleados;
-                invoicesChanged = true;
             }
         });
         viewModel.setOnFailureListener(new Repository.OnFailureListener() {
             @Override
-            public void onGeneralFailure(String error) {
-                Log.v("xyz", "entra");
-            }
-
-            @Override
-            public void onConexionFailure(String error) {
-                Log.v("xyz", error);
+            public void onConnectionFailure() {
+                splash.setLoading(false);
+                employees = null;
+                showConexionError();
             }
         });
         etUserName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -242,6 +241,11 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
+    private Login showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
+        return this;
+    }
+
     private Login findAdecuateError(TextInputEditText et, TextInputLayout il, String userError, String passwordError) {
         switch (et.getId()) {
             case R.id.etUserName:
@@ -285,7 +289,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login initAnimations() {
+    public Login initAnimations() {
         btLogin.startAnimation(initApp);
         ilUserName.startAnimation(initApp);
         ilPassword.startAnimation(initApp);
@@ -306,25 +310,7 @@ public class Login extends AppCompatActivity {
         tvLogin = findViewById(R.id.tvLogin);
         viewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         initApp = AnimationUtils.loadAnimation(this, R.anim.anim_alpha);
-        initApp.setDuration(100);
         url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
-        return this;
-    }
-
-    private Login initFabComponents() {
-        ImageView ivFab = new ImageView(this);
-        ivFab.setImageDrawable(getDrawable(R.drawable.ic_add_black_36dp));
-        ImageView ivSettings = new ImageView(this);
-        ivSettings.setImageDrawable(getDrawable(R.drawable.ic_settings_black_24dp));
-        fab = new FloatingActionButton.Builder(this)
-                .setContentView(ivFab)
-                .build();
-        SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
-        btSettings = itemBuilder.setContentView(ivSettings).build();
-        new FloatingActionMenu.Builder(this)
-                .addSubActionView(btSettings)
-                .attachTo(fab)
-                .build();
         return this;
     }
 
@@ -339,14 +325,16 @@ public class Login extends AppCompatActivity {
                         .setErrorValues(etPassword, ilPassword, tvPassword, current.getClave());
             }
         } else {
-            Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
+            etPassword.setError(null);
+            etUserName.setError(null);
+            showConexionError();
         }
         return this;
     }
 
     private boolean hasConexion() {
         boolean conexion = false;
-        if (current != null) {
+        if (employees != null) {
             conexion = true;
         }
         return conexion;
@@ -465,7 +453,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login showComponents() {
+    public Login showComponents() {
         preShowComponentsDelay();
         AfterDelay afterDelay = new AfterDelay() {
             @Override

@@ -1,6 +1,7 @@
 package org.izv.proyecto;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -13,8 +14,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,13 +35,17 @@ import org.izv.proyecto.model.data.Contenedor;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.model.data.Producto;
+import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.adapter.CommandViewAdapter;
 import org.izv.proyecto.view.adapter.ProductViewAdapter;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.CommandViewModel;
 import org.izv.proyecto.view.crud.BeforeCrud;
+import org.izv.proyecto.view.splash.OnSplash;
+import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
 import org.izv.proyecto.view.utils.Settings;
+import org.izv.proyecto.view.utils.Time;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -76,6 +84,14 @@ public class CommandActivity extends AppCompatActivity {
     private String url;
     private CommandViewModel viewModel;
     private Contenedor.CommandDetail removed;
+    private ImageView ivLoading;
+    private Splash splash;
+    private TypedArray loadingBg;
+    private AlertDialog loadingDialog;
+    private boolean loading = true;
+    private Long idInvoice;
+    private Factura invoice;
+    private boolean enabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +100,9 @@ public class CommandActivity extends AppCompatActivity {
         initComponents()
                 .initFabComponents()
                 .setSupportActionBarValues()
-                .assignEvents();
+                .assignEvents()
+                .initLoadingAlertDialogComponents().
+                createInvoice();
     }
 
     @Override
@@ -130,7 +148,6 @@ public class CommandActivity extends AppCompatActivity {
     }
 
     public CommandActivity addCommands(Producto product) {
-        long idInvoice = Long.parseLong(IO.readPreferences(CommandActivity.this, FILE_INVOICE, KEY_INVOICE_ID, "0"));
         long idEmp = Long.parseLong(IO.readPreferences(CommandActivity.this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, "0"));
         Contenedor.CommandDetail commandDetail = new Contenedor.CommandDetail();
         commandDetail.setProduct(product);
@@ -152,6 +169,7 @@ public class CommandActivity extends AppCompatActivity {
         }
         if (!duplicate) {
             command.setIdfactura(idInvoice)
+                    .setIdproducto(product.getId())
                     .setIdempleado(idEmp)
                     .setUnidades(units)
                     .setPrecio(product.getPrecio())
@@ -160,6 +178,54 @@ public class CommandActivity extends AppCompatActivity {
             commandAdapter.addCommand(commandDetail);
         }
         Toast.makeText(CommandActivity.this, product.getNombre() + " " + getString(R.string.productAdded), Toast.LENGTH_SHORT).show();
+        return this;
+    }
+
+    public CommandActivity createInvoice() {
+        long idEmp = Long.parseLong(IO.readPreferences(this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, KEY_DEFAULT_VALUE));
+        Mesa table = (Mesa) getIntent().getSerializableExtra(KEY_TABLE);
+        invoice = new Factura()
+                .setIdempleadoinicio(idEmp)
+                .setIdempleadocierre(idEmp)
+                .setHorainicio(Time.getCurrentTime())
+                .setHoracierre(Time.getCurrentTime())
+                .setIdmesa(table.getId());
+        float total = KEY_DEFAULT_PRICE;
+        invoice.setTotal(total);
+        viewModel.invoiceViewModel.add(invoice);
+        return this;
+    }
+
+    @Override
+    protected void onStop() {
+        splash.setLoading(false);
+        super.onStop();
+    }
+
+    private CommandActivity initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
+            @Override
+            public void onFinished() {
+                afterSplash();
+            }
+        });
+        splash.execute();
+        return this;
+    }
+
+    private CommandActivity afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
+        }
         return this;
     }
 
@@ -181,31 +247,56 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    private CommandActivity showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
+        return this;
+    }
+
     private CommandActivity assignEvents() {
+        viewModel.getInvoiceId().observe(this, new Observer<Long>() {
+            @Override
+            public void onChanged(Long aLong) {
+                idInvoice = aLong;
+                enabled = true;
+            }
+        });
         viewModel.productoViewModel.getAll().observe(this, new Observer<List<Producto>>() {
             @Override
             public void onChanged(List<Producto> products) {
-                productAdapter.setData(products);
-                setProducts(products).
-                        fetchCategoriesMap();
+                if (products != null) {
+                    productAdapter.setData(products);
+                    setProducts(products).
+                            fetchCategoriesMap();
+                }
+                splash.setLoading(false);
+            }
+        });
+        viewModel.setOnFailureListener(new Repository.OnFailureListener() {
+            @Override
+            public void onConnectionFailure() {
+                splash.setLoading(false);
+                showConexionError();
             }
         });
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 List<Contenedor.CommandDetail> commandDetail = commandAdapter.getCommands();
-                if (commandDetail != null && !commandDetail.isEmpty()) {
+                if (commandDetail != null && !commandDetail.isEmpty() && enabled) {
                     Intent intent = getIntent();
-                    Factura invoice = (Factura) intent.getSerializableExtra(KEY_INVOICE);
                     float total = KEY_DEFAULT_PRICE;
                     for (Contenedor.CommandDetail command : commandDetail) {
                         total += command.getCommand().getPrecio();
                     }
+                    invoice.setId(idInvoice);
                     invoice.setTotal(total);
+                    invoice.setHoracierre("");
+                    viewModel.invoiceViewModel.update(invoice);
+                    Log.v("xyz", invoice.toString());
                     Mesa table = (Mesa) intent.getSerializableExtra(KEY_TABLE);
                     table.setEstado(OCCUPIED_TABLE);
+                    Log.v("coommand", table.toString());
                     viewModel.tableViewModel.update(table);
-                    viewModel.invoiceViewModel.add(invoice);
                     for (Contenedor.CommandDetail command : commandDetail) {
                         viewModel.commandViewModel.add(command.getCommand());
                     }
@@ -220,8 +311,10 @@ public class CommandActivity extends AppCompatActivity {
         productAdapter.setOnClickListener(new ProductViewAdapter.OnClickListener() {
             @Override
             public void onItemLongClick(Producto product) {
-                addCommands(product)
-                        .setCommandTotalValue();
+                if (enabled) {
+                    addCommands(product)
+                            .setCommandTotalValue();
+                }
             }
         });
         commandAdapter.setOnClickListener(new CommandViewAdapter.OnClickListener() {

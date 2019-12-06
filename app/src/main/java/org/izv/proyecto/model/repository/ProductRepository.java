@@ -11,6 +11,7 @@ import org.izv.proyecto.model.rest.InvoiceClient;
 import org.izv.proyecto.model.rest.ProductClient;
 
 import java.io.File;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -25,6 +26,7 @@ public class ProductRepository implements Repository.Data<Producto> {
     private MutableLiveData<List<Producto>> all = new MutableLiveData<>();
     private ProductClient client;
     private Retrofit retrofit;
+    private Repository.OnFailureListener onFailureListener;
 
     public ProductRepository(String url) {
         retrieveApiClient(url);
@@ -38,9 +40,11 @@ public class ProductRepository implements Repository.Data<Producto> {
                 .build();
         client = retrofit.create(ProductClient.class);
     }
+
     public void setUrl(String url) {
         retrieveApiClient(url);
     }
+
     @Override
     public void add(Producto object) {
         Call<Long> call = client.post(object);
@@ -56,7 +60,9 @@ public class ProductRepository implements Repository.Data<Producto> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -76,7 +82,9 @@ public class ProductRepository implements Repository.Data<Producto> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -93,7 +101,9 @@ public class ProductRepository implements Repository.Data<Producto> {
 
             @Override
             public void onFailure(Call<List<Producto>> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
                 all = new MutableLiveData<>();
             }
         });
@@ -120,9 +130,15 @@ public class ProductRepository implements Repository.Data<Producto> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
+    }
+
+    public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
+        this.onFailureListener = onFailureListener;
     }
 
     @Override

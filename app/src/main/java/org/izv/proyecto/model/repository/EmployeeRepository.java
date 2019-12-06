@@ -5,10 +5,10 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Empleado;
-import org.izv.proyecto.model.repository.connection.NoConnectivityException;
 import org.izv.proyecto.model.rest.EmployeeClient;
 
 import java.io.File;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -41,6 +41,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
     public void setUrl(String url) {
         retrieveApiClient(url);
+        fetchAll();
     }
 
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
@@ -62,10 +63,8 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if (t instanceof NoConnectivityException) {
-                    onFailureListener.onConexionFailure(CONEXION);
-                } else {
-                    onFailureListener.onGeneralFailure(t.getLocalizedMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
                 }
             }
         });
@@ -86,10 +85,8 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if (t instanceof NoConnectivityException) {
-                    onFailureListener.onConexionFailure(CONEXION);
-                } else {
-                    onFailureListener.onGeneralFailure(t.getLocalizedMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
                 }
             }
         });
@@ -108,10 +105,8 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
             @Override
             public void onFailure(Call<List<Empleado>> call, Throwable t) {
                 all = new MutableLiveData<>();
-                if (t instanceof NoConnectivityException) {
-                    onFailureListener.onConexionFailure(CONEXION);
-                } else {
-                    onFailureListener.onGeneralFailure(t.getLocalizedMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
                 }
             }
         });
@@ -138,10 +133,8 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if (t instanceof NoConnectivityException) {
-                    onFailureListener.onConexionFailure(CONEXION);
-                } else {
-                    onFailureListener.onGeneralFailure(t.getLocalizedMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
                 }
             }
         });

@@ -34,9 +34,11 @@ import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
-import org.izv.proyecto.model.repository.InvoiceRepository;
+import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.adapter.MainViewAdapter;
 import org.izv.proyecto.view.model.MainViewModel;
+import org.izv.proyecto.view.splash.OnSplash;
+import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
 import org.izv.proyecto.view.utils.Time;
 import org.izv.proyecto.view.utils.Tools;
@@ -46,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xyz";
     private ActionMode actionMode;
     private MainViewAdapter adapter;
+    private boolean loading = true;
     private AlertDialog mapDialog, loadingDialog;
     private SubActionButton btLogOut, btProfile, btSettings;
     private Mesa current;
@@ -85,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
     private MainViewModel viewModel;
     private List<Mesa> tableList;
     private Bundle savedInstanceState;
-    private boolean tablesChanged, invoicesChanged, changedActivity;
-    private int cont = 0;
-    private Timer timer;
+    private ImageView ivLoading;
+    private Splash splash;
+    private TypedArray loadingBg;
 
 
     @Override
@@ -98,8 +100,6 @@ public class MainActivity extends AppCompatActivity {
                 if (mapDialog != null) {
                     mapDialog.cancel();
                 }
-                changedActivity = true;
-                Log.v("xyz", " CAMBIA");
                 recreate();
             }
         }
@@ -124,40 +124,42 @@ public class MainActivity extends AppCompatActivity {
                 .initFabComponents()
                 .setSupportActionBarValues()
                 .assignEvents()
-                .setSavedInstanceValues();
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.loadingDialog);
+                .setSavedInstanceValues()
+                .initLoadingAlertDialogComponents();
+
+    }
+
+    @Override
+    protected void onStop() {
+        splash.setLoading(false);
+        super.onStop();
+    }
+
+    private MainActivity initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.charging, null);
         dialogBuilder.setView(dialogView);
         loadingDialog = dialogBuilder.create();
         loadingDialog.show();
         loadingDialog.setCancelable(false);
-        final ImageView view = loadingDialog.findViewById(R.id.ivCharging);
-
-        timer = new Timer();
-        final TypedArray loadingBg = getResources().obtainTypedArray(R.array.loading_background);
-
-        TimerTask timerTask = new TimerTask() {
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
             @Override
-            public void run() {
-                if (cont < loadingBg.length()) {
-                    view.setImageDrawable(loadingBg.getDrawable(cont));
-                } else {
-                    cont = 0;
-                }
-                if (savedInstanceState == null) {
-                    timer.cancel();
-                    loadingDialog.cancel();
-                }
-                if (savedInstanceState != null && invoicesChanged && tablesChanged) {
-                    timer.cancel();
-                    loadingDialog.cancel();
-                }
-                Log.v("xyz", cont + "");
-                cont++;
+            public void onFinished() {
+                afterSplash();
             }
-        };
-        timer.schedule(timerTask, 0, 1);
+        });
+        splash.execute();
+        return this;
+    }
+
+    private MainActivity afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
+        }
+        return this;
     }
 
     @Override
@@ -166,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
         if (actionMode != null) {
             outState.putSerializable(KEY_ACTION_MODE, (Serializable) list);
         }
-        outState.putBoolean("ACTIVITY", changedActivity);
         super.onSaveInstanceState(outState);
     }
 
@@ -214,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MainActivity assignDialogEvents() {
+        Log.v("xyz", tableList.toString());
         for (final ImageView iv : tables) {
             iv.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -225,32 +227,50 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
+        return this;
+    }
+
     private MainActivity assignEvents() {
-        Log.v("xyz", " ENTRA ASSIGN" + changedActivity);
         viewModel.tableViewModel.getAll().observe(this, new Observer<List<Mesa>>() {
             @Override
             public void onChanged(List<Mesa> mesas) {
-                tableList = mesas;
                 adapter.setTables(mesas);
-                tablesChanged = true;
+                splash.setLoading(false);
+                if(mesas != null){
+                    tableList = mesas;
+                    fab.setEnabled(true);
+                }
             }
         });
         viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
             @Override
             public void onChanged(List<Factura> facturas) {
-                Log.v("zzyy", facturas.size() + "FACTURAS");
                 if (savedInstanceState != null && savedInstanceState.getSerializable(KEY_ACTION_MODE) == null) {
                     adapter.setData(facturas);
                 }
                 if (savedInstanceState == null) {
                     adapter.setData(facturas);
-                    invoicesChanged = true;
                 }
-                if (savedInstanceState != null && savedInstanceState.getBoolean("ACTIVITY")) {
-                    invoicesChanged = true;
-                }
+                splash.setLoading(false);
             }
         });
+        Repository.OnFailureListener onInvoiceFailure = new Repository.OnFailureListener() {
+            @Override
+            public void onConnectionFailure() {
+                splash.setLoading(false);
+                showConexionError();
+            }
+        };
+        Repository.OnFailureListener onTableFailure = new Repository.OnFailureListener() {
+            @Override
+            public void onConnectionFailure() {
+                splash.setLoading(false);
+                showConexionError();
+            }
+        };
+        viewModel.setOnFailureListener(onInvoiceFailure, onTableFailure);
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -304,8 +324,7 @@ public class MainActivity extends AppCompatActivity {
     public MainActivity checkTableState(ImageView iv) {
         long tableId = Long.parseLong(iv.getContentDescription().toString());
         if (isFree(tableId)) {
-            createInvoice(tableId)
-                    .startActivityFromResult();
+            startActivityFromResult();
 //                    .startActivity();
             Toast.makeText(this, getString(R.string.table) + " " + tableId + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
         } else {
@@ -329,17 +348,6 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    public MainActivity createInvoice(long idTable) {
-        long idEmp = Long.parseLong(IO.readPreferences(MainActivity.this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, KEY_DEFAULT_VALUE));
-        invoice = new Factura()
-                .setIdempleadoinicio(idEmp)
-                .setIdempleadocierre(idEmp)
-                .setHorainicio(Time.getCurrentTime())
-                .setIdmesa(idTable);
-        //viewModel.add(invoice);
-        IO.savePreferences(MainActivity.this, FILE_INVOICE, KEY_INVOICE_ID, String.valueOf(invoice.getId()));
-        return this;
-    }
 
     private void enableActionMode(final int position) {
         if (actionMode == null)
@@ -476,6 +484,7 @@ public class MainActivity extends AppCompatActivity {
         fab = new FloatingActionButton.Builder(this)
                 .setContentView(ivFab)
                 .build();
+        fab.setEnabled(false);
         SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
         btLogOut = itemBuilder.setContentView(ivLogOut).build();
         btProfile = itemBuilder.setContentView(ivProfile).build();
@@ -528,13 +537,13 @@ public class MainActivity extends AppCompatActivity {
 
     public MainActivity setSelectedTableValues(ImageView view) {
         long tableId = Long.parseLong(view.getContentDescription().toString());
-        for (Mesa table : tableList) {
-            if (table.getId() == tableId) {
-                int capacity = (int) table.getCapacidad();
-                int state = (int) table.getEstado();
-                setTableBg(state, view, capacity, tableId);
+            for (Mesa table : tableList) {
+                if (table.getId() == tableId) {
+                    int capacity = (int) table.getCapacidad();
+                    int state = (int) table.getEstado();
+                    setTableBg(state, view, capacity, tableId);
+                }
             }
-        }
         return this;
     }
 

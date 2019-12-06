@@ -4,12 +4,11 @@ import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
-import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
-import org.izv.proyecto.model.rest.InvoiceClient;
 import org.izv.proyecto.model.rest.TableClient;
 
 import java.io.File;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -24,12 +23,14 @@ public class TableRepository implements Repository.Data<Mesa> {
     private MutableLiveData<List<Mesa>> all = new MutableLiveData<>();
     private TableClient client;
     private Retrofit retrofit;
-
+    private Repository.OnFailureListener onFailureListener;
     public TableRepository(String url) {
         retrieveApiClient(url);
         fetchAll();
     }
-
+    public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
+        this.onFailureListener = onFailureListener;
+    }
     private void retrieveApiClient(String url) {
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://" + url + "/ProyectoFinal/public/api/")
@@ -55,7 +56,9 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -75,7 +78,9 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -92,7 +97,6 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<List<Mesa>> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
                 all = new MutableLiveData<>();
             }
         });
@@ -106,7 +110,26 @@ public class TableRepository implements Repository.Data<Mesa> {
 
     @Override
     public void update(Mesa object) {
+        Call<Long> call = client.put(object.getId(), object);
+        call.enqueue(new Callback<Long>() {
+            @Override
+            public void onResponse(Call<Long> call, Response<Long> response) {
+                if(response.body() != null){
+                    long result = response.body();
+                    Log.v(TAG, String.valueOf(result));
+                    if (result > EMPTY) {
+                        fetchAll();
+                    }
+                }
+            }
 
+            @Override
+            public void onFailure(Call<Long> call, Throwable t) {
+                if(t instanceof SocketTimeoutException){
+                    onFailureListener.onConnectionFailure();
+                }
+            }
+        });
     }
 
     @Override

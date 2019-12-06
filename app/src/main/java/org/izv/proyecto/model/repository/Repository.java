@@ -52,8 +52,6 @@ public class Repository {
     }
 
     public interface OnFailureListener {
-        void onGeneralFailure(String error);
-
-        void onConexionFailure(String error);
+        void onConnectionFailure();
     }
 }

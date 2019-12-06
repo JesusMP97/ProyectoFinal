@@ -5,10 +5,10 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Factura;
-import org.izv.proyecto.model.rest.CommandClient;
 import org.izv.proyecto.model.rest.InvoiceClient;
 
 import java.io.File;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -24,10 +24,16 @@ public class InvoiceRepository implements Repository.Data<Factura> {
     private MutableLiveData<List<Factura>> all = new MutableLiveData<>();
     private InvoiceClient client;
     private Retrofit retrofit;
+    private Repository.OnFailureListener onFailureListener;
+    private MutableLiveData<Long> invoiceId = new MutableLiveData<>();
 
     public InvoiceRepository(String url) {
         retrieveApiClient(url);
         fetchAll();
+    }
+
+    public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
+        this.onFailureListener = onFailureListener;
     }
 
     private void retrieveApiClient(String url) {
@@ -48,16 +54,21 @@ public class InvoiceRepository implements Repository.Data<Factura> {
         call.enqueue(new Callback<Long>() {
             @Override
             public void onResponse(Call<Long> call, Response<Long> response) {
-                long result = response.body();
-                Log.v(TAG, String.valueOf(result));
-                if (result > EMPTY) {
-                    fetchAll();
+                if (response.body() != null) {
+                    long result = response.body();
+                    Log.v(TAG, String.valueOf(result));
+                    invoiceId.setValue(response.body());
+                    if (result > EMPTY) {
+                        fetchAll();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -77,7 +88,9 @@ public class InvoiceRepository implements Repository.Data<Factura> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -94,8 +107,10 @@ public class InvoiceRepository implements Repository.Data<Factura> {
 
             @Override
             public void onFailure(Call<List<Factura>> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
                 all = new MutableLiveData<>();
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -122,7 +137,9 @@ public class InvoiceRepository implements Repository.Data<Factura> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -130,5 +147,9 @@ public class InvoiceRepository implements Repository.Data<Factura> {
     @Override
     public void upload(File file) {
 
+    }
+
+    public MutableLiveData<Long> getInvoiceId() {
+        return invoiceId;
     }
 }

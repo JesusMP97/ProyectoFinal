@@ -2,12 +2,14 @@ package org.izv.proyecto.model.repository;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.rest.CommandClient;
 
 import java.io.File;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -29,6 +31,10 @@ public class CommandRepository implements Repository.Data<Comanda> {
         fetchAll();
     }
 
+    public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
+        this.onFailureListener = onFailureListener;
+    }
+
     private void retrieveApiClient(String url) {
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://" + url + "/ProyectoFinal/public/api/")
@@ -47,16 +53,21 @@ public class CommandRepository implements Repository.Data<Comanda> {
         call.enqueue(new Callback<Long>() {
             @Override
             public void onResponse(Call<Long> call, Response<Long> response) {
-                long result = response.body();
-                Log.v(TAG, String.valueOf(result));
-                if (result > EMPTY) {
-                    fetchAll();
+                Log.v("CommandRepository","OnReponse");
+                if(response.body() != null){
+                    long result = response.body();
+                    Log.v(TAG, String.valueOf(result));
+                    if (result > EMPTY) {
+                        fetchAll();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -76,7 +87,9 @@ public class CommandRepository implements Repository.Data<Comanda> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }
@@ -93,7 +106,9 @@ public class CommandRepository implements Repository.Data<Comanda> {
 
             @Override
             public void onFailure(Call<List<Comanda>> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
                 all = new MutableLiveData<>();
             }
         });
@@ -120,7 +135,9 @@ public class CommandRepository implements Repository.Data<Comanda> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v(TAG, t.getCause().getMessage());
+                if (t instanceof SocketTimeoutException) {
+                    onFailureListener.onConnectionFailure();
+                }
             }
         });
     }

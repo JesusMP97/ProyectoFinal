@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Factura;
@@ -13,6 +14,7 @@ import org.izv.proyecto.model.data.Producto;
 import org.izv.proyecto.model.repository.CommandRepository;
 import org.izv.proyecto.model.repository.InvoiceRepository;
 import org.izv.proyecto.model.repository.ProductRepository;
+import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.model.repository.TableRepository;
 import org.izv.proyecto.view.utils.IO;
 import org.izv.proyecto.view.utils.Settings;
@@ -22,6 +24,14 @@ import java.util.List;
 
 public class CommandViewModel extends AndroidViewModel {
     private ProductRepository productRepository;
+
+    public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
+        productRepository.setOnFailureListener(onFailureListener);
+    }
+
+    public LiveData<Long> getInvoiceId() {
+        return invoiceRepository.getInvoiceId();
+    }
 
 
     public ViewModel<Producto> productoViewModel = new ViewModel<Producto>() {

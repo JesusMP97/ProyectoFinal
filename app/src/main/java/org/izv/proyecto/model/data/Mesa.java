@@ -50,4 +50,15 @@ public class Mesa implements Serializable {
         this.capacidad = capacidad;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "Mesa{" +
+                "id=" + id +
+                ", numero=" + numero +
+                ", estado=" + estado +
+                ", capacidad=" + capacidad +
+                ", zona='" + zona + '\'' +
+                '}';
+    }
 }
