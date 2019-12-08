@@ -2,6 +2,14 @@ package org.izv.proyecto.view.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
+import android.os.Build;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.TextAppearanceSpan;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -13,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,24 +30,35 @@ import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.view.utils.CustomAnimation;
 import org.izv.proyecto.view.utils.CustomShape;
+import org.izv.proyecto.view.utils.Time;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHolder> implements Filterable {
-
+    private static final String FORMAT = "HH:mm";
     private static final long LAST_TABLE_POSITION = 15;
-    private Context context;
+    private static Context context;
     private OnCreateContextMenuListener contextMenuListener;
     private int currentSelectedPos;
     private MainViewAdapterFilter filter;
     private LayoutInflater inflater;
-    private List<Factura> invoices, invoicesAll;
+    private List<Factura> invoices, invoicesAll, invoicesFiltered;
     private OnClickListener onClickListener;
     private SparseBooleanArray selectedItems;
     private List<Mesa> tables;
+    private static String search = "";
+    private SpannableStringBuilder fullText;
+    private int position;
 
+    public List<Factura> getInvoicesFiltered() {
+        return invoicesFiltered;
+    }
 
     public MainViewAdapter(Context context) {
         filter = new MainViewAdapterFilter();
@@ -58,22 +78,40 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         return new ItemHolder(inflater.inflate(R.layout.invoice_item, parent, false));
     }
 
+    private void bindItem(TextView item, String text) {
+        fullText = new SpannableStringBuilder(text);
+        item.setText(highlightSearchText(fullText, search));
+    }
+
+    public String getTableType(long id) {
+        String tableType = "";
+        if (id <= LAST_TABLE_POSITION) {
+            tableType = context.getString(R.string.table);
+        } else {
+            tableType = context.getString(R.string.bar);
+        }
+        return tableType;
+    }
+
+
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull final ItemHolder holder, final int position) {
         if (invoices != null && tables != null) {
+            this.position = position;
             Factura current = invoices.get(position);
+            Mesa currentTable = getCurrentTable(current);
             holder.bind(current);
-            holder.tvItemPlace.setText("Zona: Exterior");
-            if (current.getIdmesa() <= LAST_TABLE_POSITION) {
-                holder.tvItemDestination.setText(context.getString(R.string.table) + " " + current.getIdmesa());
-            } else {
-                holder.tvItemDestination.setText(context.getString(R.string.bar) + " " + current.getIdmesa());
-            }
-            long clients = getTableCapacity(current);
-            holder.tvItemTotalClients.setText(context.getString(R.string.totalClients) + " " + clients);
-            holder.tvItemStartUpTime.setText(current.getHorainicio());
-            holder.tvItemTotalPrice.setText(context.getString(R.string.totalPrice) + " " + current.getTotal() + context.getString(R.string.euro));
+            String place = context.getString(R.string.place) + " " + currentTable.getZona();
+            bindItem(holder.tvItemPlace, place);
+            String tableNumber = getTableType(current.getIdmesa()) + " " + currentTable.getNumero();
+            bindItem(holder.tvItemDestination, tableNumber);
+            String clients = context.getString(R.string.totalClients) + " " + currentTable.getCapacidad();
+            bindItem(holder.tvItemTotalClients, clients);
+            String startUpTime = Time.getTimeFormatted(FORMAT, current.getHorainicio());
+            bindItem(holder.tvItemStartUpTime, startUpTime);
+            String totalPrice = context.getString(R.string.totalPrice) + " " + current.getTotal() + context.getString(R.string.euro);
+            bindItem(holder.tvItemTotalPrice, totalPrice);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -102,14 +140,14 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         if (currentSelectedPos == position) currentSelectedPos = -1;
     }
 
-    public long getTableCapacity(Factura current) {
-        long clients = 0;
+    public Mesa getCurrentTable(Factura current) {
+        Mesa mesa = new Mesa();
         for (Mesa table : tables) {
             if (table.getId() == current.getIdmesa()) {
-                clients = table.getCapacidad();
+                mesa = table;
             }
         }
-        return clients;
+        return mesa;
     }
 
     @Override
@@ -225,22 +263,50 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         }
     }
 
-    public class MainViewAdapterFilter extends Filter {
 
-        @Override
-        protected FilterResults performFiltering(CharSequence charSequence) {
+    public class MainViewAdapterFilter extends Filter {
+        private void add(Factura current, String attribute, String sequence, List<Factura> filtered) {
+            if (attribute.toLowerCase().contains(sequence.toLowerCase())) {
+                if (!filtered.contains(current)) {
+                    search = sequence;
+                    filtered.add(current);
+                }
+            } else {
+                search = sequence;
+            }
+        }
+
+        private List<Factura> getFilteredInvoices(CharSequence charSequence) {
             List<Factura> filtered = new ArrayList<>();
             if (charSequence == null || charSequence.toString().isEmpty()) {
+                search = charSequence.toString();
                 filtered.addAll(invoicesAll);
             } else {
+                Log.v("MainActivity","ENTREASSADDASSDDAS");
                 for (Factura invoice : invoicesAll) {
-                    if (String.valueOf(invoice.getIdempleadocierre()).toLowerCase().contains(charSequence.toString().toLowerCase())) {
-                        filtered.add(invoice);
+                    String totalPrice = context.getString(R.string.totalPrice) + " " + invoice.getTotal() + context.getString(R.string.euro);
+                    add(invoice, totalPrice, charSequence.toString(), filtered);
+                    String startUpTime = Time.getTimeFormatted(FORMAT, invoice.getHorainicio());
+                    add(invoice, startUpTime, charSequence.toString(), filtered);
+                    for (Mesa table : tables) {
+                        if (table.getId() == invoice.getIdmesa()) {
+                            String tableNumber = getTableType(invoice.getIdmesa()) + " " + table.getNumero();
+                            add(invoice, tableNumber, charSequence.toString(), filtered);
+                            String place = context.getString(R.string.place) + " " + table.getZona();
+                            add(invoice, place, charSequence.toString(), filtered);
+                            String clients = context.getString(R.string.totalClients) + " " + table.getCapacidad();
+                            add(invoice, clients, charSequence.toString(), filtered);
+                        }
                     }
                 }
             }
+            return filtered;
+        }
+
+        @Override
+        protected FilterResults performFiltering(CharSequence charSequence) {
             FilterResults filterResults = new FilterResults();
-            filterResults.values = filtered;
+            filterResults.values = getFilteredInvoices(charSequence);
             return filterResults;
         }
 
@@ -251,5 +317,29 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             invoices.addAll((Collection<? extends Factura>) results.values);
             notifyDataSetChanged();
         }
+    }
+
+    public static SpannableStringBuilder highlightSearchText(SpannableStringBuilder fullText, String searchText) {
+        if (searchText.isEmpty()) {
+            return fullText;
+        }
+        SpannableStringBuilder wordSpan = new SpannableStringBuilder(fullText);
+        Pattern p = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(fullText);
+        while (m.find()) {
+            int wordStart = m.start();
+            int wordEnd = m.end();
+            setWordSpan(wordSpan, wordStart, wordEnd);
+        }
+        return wordSpan;
+    }
+
+    private static void setWordSpan(SpannableStringBuilder wordSpan, int wordStart, int wordEnd) {
+        int color = context.getResources().getColor(R.color.colorAccent);
+        ColorStateList redColor = new ColorStateList(new int[][]{new int[]{}}, new int[]{color});
+        TextAppearanceSpan highlightSpan = new TextAppearanceSpan(null, Typeface.BOLD, -1, redColor, null);
+        wordSpan.setSpan(highlightSpan, wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        //wordSpan.setSpan(new BackgroundColorSpan(0xFFFCFF48), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        wordSpan.setSpan(new RelativeSizeSpan(1.15f), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 }

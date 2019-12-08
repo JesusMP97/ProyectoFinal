@@ -41,14 +41,11 @@ import org.izv.proyecto.view.model.MainViewModel;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
-import org.izv.proyecto.view.utils.Time;
 import org.izv.proyecto.view.utils.Tools;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -61,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_ACTION_MODE = "actionmode";
     private static final String KEY_DEFAULT_VALUE = "0";
     private static final String KEY_INVOICE = "invoice";
+    private static final String KEY_INVOICES_FILTERED = "invoicesFiltered";
     private static final String KEY_INVOICE_ID = "invoiceId";
     private static final int KEY_MAIN_INTENT = 1;
     private static final String KEY_TABLE = "table";
@@ -69,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int OCTA_TABLE = 8;
     private static final int QUADRUPLE_TABLE = 4;
     private static final int RESERVED_TABLE = 2;
+    private static final String KEY_MAP_DIALOG = "showed";
+    private static final String KEY_SEARCH = "search";
     private static final int SINGLE_TABLE = 1;
     private static final String TAG = "xyz";
     private ActionMode actionMode;
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView ivLoading;
     private Splash splash;
     private TypedArray loadingBg;
-
+    private String search;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -146,12 +146,13 @@ public class MainActivity extends AppCompatActivity {
         loadingDialog.setCancelable(false);
         loadingBg = getResources().obtainTypedArray(R.array.loading_background);
         ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
             @Override
             public void onFinished() {
                 afterSplash();
             }
         });
+        splash.setLoading2(true);
         splash.execute();
         return this;
     }
@@ -159,6 +160,11 @@ public class MainActivity extends AppCompatActivity {
     private MainActivity afterSplash() {
         if (!this.isDestroyed()) {
             loadingDialog.cancel();
+            if (savedInstanceState != null && savedInstanceState.getBoolean(KEY_MAP_DIALOG)) {
+                createDialog()
+                        .initDialogComponents()
+                        .assignDialogEvents();
+            }
         }
         return this;
     }
@@ -169,6 +175,16 @@ public class MainActivity extends AppCompatActivity {
         if (actionMode != null) {
             outState.putParcelableArrayList(KEY_ACTION_MODE, (ArrayList<? extends Parcelable>) list);
         }
+        if (mapDialog != null && mapDialog.isShowing()) {
+            outState.putBoolean(KEY_MAP_DIALOG, true);
+        }
+        String search = svSearch.getQuery().toString();
+//        if (!search.isEmpty()) {
+//            Log.v("OOPP","FILTEREDSDASADASADSDASA" + adapter.getInvoices());
+//            outState.putParcelableArrayList(KEY_INVOICES_FILTERED, (ArrayList<? extends Parcelable>) adapter.getInvoices());
+//
+//        }
+        outState.putString(KEY_SEARCH, search);
         super.onSaveInstanceState(outState);
     }
 
@@ -178,6 +194,14 @@ public class MainActivity extends AppCompatActivity {
         inflater.inflate(R.menu.menu_main, menu);
         MenuItem menuItem = menu.findItem(R.id.itSearch);
         svSearch = (SearchView) menuItem.getActionView();
+        if (search != null && !search.isEmpty()) {
+            Log.v("MainActivity", "ENTRA");
+            Log.v("MainActivity", search);
+            menuItem.expandActionView();
+            svSearch.setQuery(search, true);
+            svSearch.clearFocus();
+            adapter.getFilter().filter(search);
+        }
         svSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -216,7 +240,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MainActivity assignDialogEvents() {
-        Log.v("xyz", tableList.toString());
         for (final ImageView iv : tables) {
             iv.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -238,11 +261,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(List<Mesa> mesas) {
                 adapter.setTables(mesas);
-                splash.setLoading(false);
-                if (mesas != null) {
-                    tableList = mesas;
-                    fab.setEnabled(true);
-                }
+                tableList = mesas;
+                fab.setEnabled(true);
+                splash.setLoading2(false);
+
             }
         });
         viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
@@ -252,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     adapter.setData(facturas);
                 }
                 if (savedInstanceState == null) {
+                    Log.v("OOPP", "3");
                     adapter.setData(facturas);
                 }
                 splash.setLoading(false);
@@ -524,14 +547,17 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressWarnings("unchecked")
     private MainActivity setSavedInstanceValues() {
-        if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) != null) {
-            List<Factura> list = savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE);
-            adapter.setData(list);
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).isSelected()) {
-                    enableActionMode(i);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) != null) {
+                List<Factura> list = savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE);
+                adapter.setData(list);
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).isSelected()) {
+                        enableActionMode(i);
+                    }
                 }
             }
+            search = savedInstanceState.getString(KEY_SEARCH);
         }
         return this;
     }
@@ -575,7 +601,7 @@ public class MainActivity extends AppCompatActivity {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE,  invoice)
+                .putExtra(KEY_INVOICE, invoice)
                 .putExtra(KEY_TABLE, current);
         startActivity(intent);
         return this;
@@ -586,8 +612,8 @@ public class MainActivity extends AppCompatActivity {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE,  invoice)
-                .putExtra(KEY_TABLE,  current);
+                .putExtra(KEY_INVOICE, invoice)
+                .putExtra(KEY_TABLE, current);
         startActivityForResult(intent, KEY_MAIN_INTENT);
         return this;
     }

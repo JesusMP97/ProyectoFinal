@@ -11,9 +11,12 @@
         android:id="@+id/ivDoubleTable1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:contentDescription="1"
         app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/guideline5"
         app:layout_constraintTop_toTopOf="@+id/ivDoubleTable2"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
@@ -24,6 +27,8 @@
         android:layout_marginEnd="8dp"
         android:contentDescription="2"
         app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable3"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ivDoubleTable1"
         app:layout_constraintTop_toTopOf="@+id/ivDoubleTable3"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
@@ -31,10 +36,12 @@
         android:id="@+id/ivDoubleTable3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:contentDescription="3"
+        app:layout_constraintBottom_toTopOf="@+id/guideline7"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ivDoubleTable2"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
@@ -42,46 +49,44 @@
         android:id="@+id/ivDoubleTable4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:contentDescription="4"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/guideline17"
         app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable5"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline12"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
     <ImageView
         android:id="@+id/ivDoubleTable5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:contentDescription="5"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable6"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/ivDoubleTable4"
+        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable4"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
     <ImageView
         android:id="@+id/ivDoubleTable6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
         android:contentDescription="6"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline6"
         app:layout_constraintStart_toEndOf="@+id/ivDoubleTable5"
+        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable5"
         app:srcCompat="@drawable/mesadoble_horizontal" />
 
     <ImageView
         android:id="@+id/ivDoubleTable7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="44dp"
         android:layout_marginEnd="8dp"
         android:contentDescription="7"
+        app:layout_constraintBottom_toTopOf="@+id/ivDoubleTable8"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/guideline8"
         app:layout_constraintTop_toBottomOf="@+id/ivDoubleTable3"
         app:srcCompat="@drawable/mesadoble_vertical" />
 
@@ -90,9 +95,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
         android:contentDescription="8"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintEnd_toEndOf="@+id/ivDoubleTable7"
         app:layout_constraintTop_toBottomOf="@+id/ivDoubleTable7"
         app:srcCompat="@drawable/mesadoble_vertical" />
 
@@ -100,10 +105,10 @@
         android:id="@+id/ivQuadrupleTable1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
         android:contentDescription="9"
-        app:layout_constraintEnd_toStartOf="@+id/ivQuadrupleTable3"
-        app:layout_constraintTop_toTopOf="@+id/ivQuadrupleTable3"
+        app:layout_constraintEnd_toStartOf="@+id/guideline6"
+        app:layout_constraintStart_toStartOf="@+id/guideline5"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
         app:srcCompat="@drawable/mesacuadruple" />
 
     <ImageView
@@ -112,6 +117,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:contentDescription="10"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toEndOf="@+id/ivQuadrupleTable1"
         app:layout_constraintTop_toBottomOf="@+id/ivQuadrupleTable1"
         app:srcCompat="@drawable/mesacuadruple" />
@@ -120,10 +126,10 @@
         android:id="@+id/ivQuadrupleTable3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
         android:contentDescription="11"
-        app:layout_constraintEnd_toStartOf="@+id/ivDoubleTable7"
-        app:layout_constraintTop_toTopOf="@+id/ivDoubleTable7"
+        app:layout_constraintEnd_toStartOf="@+id/guideline8"
+        app:layout_constraintStart_toStartOf="@+id/guideline6"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
         app:srcCompat="@drawable/mesacuadruple" />
 
     <ImageView
@@ -132,6 +138,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:contentDescription="12"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toEndOf="@+id/ivQuadrupleTable3"
         app:layout_constraintTop_toBottomOf="@+id/ivQuadrupleTable3"
         app:srcCompat="@drawable/mesacuadruple" />
@@ -140,11 +147,12 @@
         android:id="@+id/ivOctaTable1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="32dp"
         android:contentDescription="13"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/ivOctaTable3"
+        app:layout_constraintEnd_toStartOf="@+id/ivOctaTable2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/guideline10"
+        app:layout_constraintTop_toTopOf="@+id/guideline7"
         app:srcCompat="@drawable/mesaredonda" />
 
     <ImageView
@@ -152,10 +160,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="70dp"
         android:contentDescription="14"
+        app:layout_constraintBottom_toBottomOf="@+id/ivOctaTable3"
+        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/ivOctaTable1"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ivOctaTable1"
         app:srcCompat="@drawable/mesaredonda" />
 
     <ImageView
@@ -164,6 +174,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:contentDescription="15"
+        app:layout_constraintBottom_toTopOf="@+id/guideline11"
         app:layout_constraintStart_toStartOf="@+id/ivOctaTable1"
         app:layout_constraintTop_toBottomOf="@+id/ivOctaTable1"
         app:srcCompat="@drawable/mesaredonda" />
@@ -174,10 +185,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="46dp"
         android:contentDescription="16"
         android:rotation="180"
-        app:layout_constraintBottom_toTopOf="@+id/ivDoubleTable4"
+        app:layout_constraintBottom_toTopOf="@+id/guideline15"
         app:layout_constraintEnd_toStartOf="@+id/ivBar2"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -189,7 +199,7 @@
         android:layout_height="wrap_content"
         android:contentDescription="17"
         android:rotation="180"
-        app:layout_constraintBottom_toBottomOf="@+id/ivBar1"
+        app:layout_constraintBottom_toTopOf="@+id/guideline15"
         app:layout_constraintEnd_toStartOf="@+id/ivBar3"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/ivBar1"
@@ -202,7 +212,7 @@
         android:layout_marginStart="8dp"
         android:contentDescription="18"
         android:rotation="180"
-        app:layout_constraintBottom_toBottomOf="@+id/ivBar2"
+        app:layout_constraintBottom_toTopOf="@+id/guideline15"
         app:layout_constraintEnd_toStartOf="@+id/ivBar4"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/ivBar2"
@@ -212,11 +222,11 @@
         android:id="@+id/ivBar4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
         android:contentDescription="19"
         android:rotation="180"
-        app:layout_constraintStart_toEndOf="@+id/ivBar3"
+        app:layout_constraintBottom_toTopOf="@+id/guideline16"
+        app:layout_constraintEnd_toStartOf="@+id/guideline14"
         app:layout_constraintTop_toBottomOf="@+id/ivBar5"
         app:srcCompat="@drawable/silla" />
 
@@ -224,11 +234,109 @@
         android:id="@+id/ivBar5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
         android:contentDescription="20"
         android:rotation="180"
-        app:layout_constraintBottom_toTopOf="@+id/ivBar3"
-        app:layout_constraintStart_toStartOf="@+id/ivBar4"
+        app:layout_constraintBottom_toTopOf="@+id/ivBar4"
+        app:layout_constraintEnd_toStartOf="@+id/guideline14"
+        app:layout_constraintTop_toTopOf="@+id/guideline"
         app:srcCompat="@drawable/silla" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.59" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.23" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.4622871" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.71" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.12722299" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.89" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.15458277" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.05839416" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.4500684" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.878249" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline14"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.38199514" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.79" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.7250342" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline17"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.98" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

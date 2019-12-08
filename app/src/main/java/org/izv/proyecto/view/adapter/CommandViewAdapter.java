@@ -52,7 +52,7 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
             final Producto currentProduct = current.getProduct();
             holder.tvCommandItemName.setText(currentProduct.getNombre());
             holder.tvCommandItemAmount.setText(String.valueOf(currentCommand.getUnidades()));
-            holder.tvCommandItemPrice.setText(String.format(Locale.GERMAN, PRICE_FORMAT, currentCommand.getPrecio()));
+            holder.tvCommandItemPrice.setText(String.format(Locale.GERMAN, PRICE_FORMAT, currentProduct.getPrecio() * currentCommand.getUnidades()));
             holder.tvCommandItemLess.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

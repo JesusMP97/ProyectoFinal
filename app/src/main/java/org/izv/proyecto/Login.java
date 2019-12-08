@@ -92,7 +92,7 @@ public class Login extends AppCompatActivity {
         loadingDialog.setCancelable(false);
         loadingBg = getResources().obtainTypedArray(R.array.loading_background);
         ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
             @Override
             public void onFinished() {
                 afterSplash();

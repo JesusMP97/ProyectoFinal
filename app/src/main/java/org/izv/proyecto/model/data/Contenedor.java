@@ -1,5 +1,8 @@
 package org.izv.proyecto.model.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +77,7 @@ public class Contenedor {
         return this;
     }
 
-    public static class CommandDetail {
+    public static class CommandDetail implements Parcelable {
         private Comanda command;
         private Producto product;
 
@@ -87,12 +90,40 @@ public class Contenedor {
             this.product = product;
         }
 
+        protected CommandDetail(Parcel in) {
+            command = in.readParcelable(Comanda.class.getClassLoader());
+            product = in.readParcelable(Producto.class.getClassLoader());
+        }
+
+        public static final Creator<CommandDetail> CREATOR = new Creator<CommandDetail>() {
+            @Override
+            public CommandDetail createFromParcel(Parcel in) {
+                return new CommandDetail(in);
+            }
+
+            @Override
+            public CommandDetail[] newArray(int size) {
+                return new CommandDetail[size];
+            }
+        };
+
         @Override
         public String toString() {
             return "CommandDetail{" +
                     "command=" + command.toString() +
                     ", productList=" + product.toString() +
                     '}';
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeParcelable(command, flags);
+            dest.writeParcelable(product, flags);
         }
 
         public Comanda getCommand() {

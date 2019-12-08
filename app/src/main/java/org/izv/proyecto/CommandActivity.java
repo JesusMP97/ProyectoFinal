@@ -15,8 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.opengl.Visibility;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,6 +28,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import org.izv.circularfloatingbutton.FloatingActionButton;
 import org.izv.circularfloatingbutton.FloatingActionMenu;
@@ -55,15 +58,19 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandActivity extends AppCompatActivity {
-
+    private static final String KEY_PRICE = "price";
+    private static final String KEY_SEARCH = "search";
     public static final int OCCUPIED_TABLE = 0;
     private static final String FILE_INVOICE = "invoice";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
+    private static final String KEY_COMMANDS = "commands";
     private static final float KEY_DEFAULT_PRICE = 0;
     private static final String KEY_DEFAULT_VALUE = "0";
+    private static final String KEY_FILTER = "filter";
     private static final String KEY_INVOICE = "invoice";
     private static final String KEY_INVOICE_ID = "invoiceId";
+    private static final String KEY_PRODUCTS = "products";
     private static final String KEY_TABLE = "table";
     private static final long MIN_AMOUNT = 1;
     private static final long POST_CLOSE_SEARCH_VIEW = 300;
@@ -88,21 +95,38 @@ public class CommandActivity extends AppCompatActivity {
     private Splash splash;
     private TypedArray loadingBg;
     private AlertDialog loadingDialog;
-    private boolean loading = true;
     private Long idInvoice;
     private Factura invoice;
     private boolean enabled = false;
+    private Bundle savedInstanceState;
+    private String search;
+    private float totalPrice;
+    private com.google.android.material.floatingactionbutton.FloatingActionButton fabf;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.savedInstanceState = savedInstanceState;
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_insert);
+        setContentView(R.layout.activity_command);
         initComponents()
                 .initFabComponents()
                 .setSupportActionBarValues()
                 .assignEvents()
                 .initLoadingAlertDialogComponents().
-                createInvoice();
+                createInvoice()
+                .setSavedInstanceValues();
+    }
+
+    private CommandActivity setSavedInstanceValues() {
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getParcelableArrayList(KEY_COMMANDS) != null) {
+                List<Contenedor.CommandDetail> commandDetailList = savedInstanceState.getParcelableArrayList(KEY_COMMANDS);
+                commandAdapter.setData(commandDetailList);
+            }
+            search = savedInstanceState.getString(KEY_SEARCH);
+            setCommandTotalValue();
+        }
+        return this;
     }
 
     @Override
@@ -111,6 +135,15 @@ public class CommandActivity extends AppCompatActivity {
         inflater.inflate(R.menu.menu_command, menu);
         itSearch = menu.findItem(R.id.itSearch);
         svSearch = (SearchView) itSearch.getActionView();
+        if (search != null && !search.isEmpty()) {
+            Log.v("MainActivity", "ENTRA");
+            Log.v("MainActivity", search);
+            itSearch.expandActionView();
+            svSearch.setQuery(search, true);
+            svSearch.clearFocus();
+            productAdapter.getFilter().filter(search);
+            setVisibility(View.GONE);
+        }
         assignMenuEvents();
         return super.onCreateOptionsMenu(menu);
     }
@@ -159,7 +192,7 @@ public class CommandActivity extends AppCompatActivity {
                 if (cc.getProduct().getNombre().equalsIgnoreCase(product.getNombre())) {
                     units = cc.getCommand().getUnidades();
                     units++;
-                    float totalPrice = cc.getProduct().getPrecio() * units;
+                    totalPrice = cc.getProduct().getPrecio() * units;
                     cc.getCommand().setUnidades(units)
                             .setPrecio(totalPrice);
                     duplicate = true;
@@ -202,6 +235,15 @@ public class CommandActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(KEY_COMMANDS, (ArrayList<? extends Parcelable>) commandAdapter.getCommands());
+        outState.putParcelableArrayList(KEY_PRODUCTS, (ArrayList<? extends Parcelable>) productAdapter.getProducts());
+        String search = svSearch.getQuery().toString();
+        outState.putString(KEY_SEARCH, search);
+    }
+
     private CommandActivity initLoadingAlertDialogComponents() {
         AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -212,7 +254,7 @@ public class CommandActivity extends AppCompatActivity {
         loadingDialog.setCancelable(false);
         loadingBg = getResources().obtainTypedArray(R.array.loading_background);
         ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loading, loadingBg, ivLoading, loadingDialog, new OnSplash() {
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
             @Override
             public void onFinished() {
                 afterSplash();
@@ -263,11 +305,18 @@ public class CommandActivity extends AppCompatActivity {
         viewModel.productoViewModel.getAll().observe(this, new Observer<List<Producto>>() {
             @Override
             public void onChanged(List<Producto> products) {
-                if (products != null) {
+                setProducts(products).
+                        fetchCategoriesMap();
+
+                if (savedInstanceState == null) {
                     productAdapter.setData(products);
-                    setProducts(products).
-                            fetchCategoriesMap();
                 }
+
+                if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_PRODUCTS) != null) {
+                    List<Producto> productos = savedInstanceState.getParcelableArrayList(KEY_PRODUCTS);
+                    productAdapter.setData(productos);
+                }
+
                 splash.setLoading(false);
             }
         });
@@ -320,7 +369,8 @@ public class CommandActivity extends AppCompatActivity {
         commandAdapter.setOnClickListener(new CommandViewAdapter.OnClickListener() {
             @Override
             public void onItemClick(Contenedor.CommandDetail current, View view) {
-                doTheAppropriateOperation(view.getId(), current);
+                doTheAppropriateOperation(view.getId(), current)
+                        .setCommandTotalValue();
             }
         });
         return this;
@@ -387,19 +437,29 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    private CommandActivity setVisibility(int visibility) {
+        fabf.setVisibility(visibility);
+        fab.setVisibility(visibility);
+        tvCommandTotal.setVisibility(visibility);
+        return this;
+    }
+
     private CommandActivity assignMenuEvents() {
         itSearch.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
+                setVisibility(View.GONE);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
-                adjustComponents();
+                adjustComponents()
+                        .setVisibility(View.VISIBLE);
                 return true;
             }
         });
+
         svSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -452,13 +512,14 @@ public class CommandActivity extends AppCompatActivity {
     public String getTotalPriceOfCommands() {
         float total = 0;
         for (Contenedor.CommandDetail com : commandAdapter.getCommands()) {
-            total += com.getCommand().getPrecio();
+            total += com.getCommand().getUnidades() * com.getProduct().getPrecio();
         }
         return String.format(String.format(Locale.GERMAN, PRICE_FORMAT, total));
     }
 
     private CommandActivity initComponents() {
         tb = findViewById(R.id.tb);
+        fabf = findViewById(R.id.fabF);
         clContainter = findViewById(R.id.clContainter);
         glX = findViewById(R.id.glX);
         rvProductList = findViewById(R.id.rvProductList);
@@ -527,6 +588,7 @@ public class CommandActivity extends AppCompatActivity {
         this.products = products;
         return this;
     }
+
 
     private CommandActivity setSupportActionBarValues() {
         setSupportActionBar(tb);

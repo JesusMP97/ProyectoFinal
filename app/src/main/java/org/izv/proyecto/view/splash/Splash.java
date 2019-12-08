@@ -12,17 +12,16 @@ import org.izv.proyecto.Login;
 
 public class Splash extends AsyncTask<Void, Integer, Integer> {
     private int cont = 0;
-    private boolean loading;
+    private boolean loading = true, loading2 = false;
     private TypedArray loadingBg;
     private ImageView ivLoading;
-    private AlertDialog loadingDialog;
     private OnSplash onSplash;
+    private static final long DELAY = 50;
+    private static final int DEFAULT_VALUE = 0;
 
-    public Splash(boolean loading, TypedArray loadingBg, ImageView ivLoading, AlertDialog loadingDialog, OnSplash onSplash) {
-        this.loading = loading;
+    public Splash(TypedArray loadingBg, ImageView ivLoading, AlertDialog loadingDialog, OnSplash onSplash) {
         this.loadingBg = loadingBg;
         this.ivLoading = ivLoading;
-        this.loadingDialog = loadingDialog;
         this.onSplash = onSplash;
     }
 
@@ -31,18 +30,19 @@ public class Splash extends AsyncTask<Void, Integer, Integer> {
         return this;
     }
 
-    public boolean isLoading() {
-        return loading;
+    public Splash setLoading2(boolean loading2) {
+        this.loading2 = loading2;
+        return this;
     }
 
     @Override
     protected Integer doInBackground(final Void... voids) {
-        while (loading) {
+        while (loading || loading2) {
             if (cont >= loadingBg.length()) {
-                cont = 0;
+                cont = DEFAULT_VALUE;
             }
             try {
-                Thread.sleep(50);
+                Thread.sleep(DELAY);
                 publishProgress(cont);
             } catch (InterruptedException e) {
                 e.printStackTrace();

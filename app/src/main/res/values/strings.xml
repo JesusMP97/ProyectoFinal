@@ -56,5 +56,6 @@
     <string name="tbInvoicesTitle">Facturas</string>
     <string name="totalClients">Clientes totales:</string>
     <string name="totalPrice">Precio total:</string>
+    <string name="place">Zona:</string>
 
 </resources>
