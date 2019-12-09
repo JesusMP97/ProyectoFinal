@@ -58,6 +58,9 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandActivity extends AppCompatActivity {
+    private static final int ASC = 1;
+    private static final long COMMAND_UNDELIVERABLE = 0;
+    private static final int DESC = -1;
     private static final String KEY_PRICE = "price";
     private static final String KEY_SEARCH = "search";
     public static final int OCCUPIED_TABLE = 0;
@@ -136,8 +139,6 @@ public class CommandActivity extends AppCompatActivity {
         itSearch = menu.findItem(R.id.itSearch);
         svSearch = (SearchView) itSearch.getActionView();
         if (search != null && !search.isEmpty()) {
-            Log.v("MainActivity", "ENTRA");
-            Log.v("MainActivity", search);
             itSearch.expandActionView();
             svSearch.setQuery(search, true);
             svSearch.clearFocus();
@@ -152,11 +153,19 @@ public class CommandActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.subItName:
-                sortProductsByName();
+                sortProductsByName(ASC);
+                productAdapter.setData(currentProducts);
+                break;
+            case R.id.subItNameDes:
+                sortProductsByName(DESC);
                 productAdapter.setData(currentProducts);
                 break;
             case R.id.subItPrice:
-                sortProductsByPrice();
+                sortProductsByPrice(ASC);
+                productAdapter.setData(currentProducts);
+                break;
+            case R.id.subItPriceDes:
+                sortProductsByPrice(DESC);
                 productAdapter.setData(currentProducts);
                 break;
             case R.id.itSearch:
@@ -206,7 +215,7 @@ public class CommandActivity extends AppCompatActivity {
                     .setIdempleado(idEmp)
                     .setUnidades(units)
                     .setPrecio(product.getPrecio())
-                    .setEntregada(units);
+                    .setEntregada(COMMAND_UNDELIVERABLE);
             commandDetail.setCommand(command);
             commandAdapter.addCommand(commandDetail);
         }
@@ -215,6 +224,23 @@ public class CommandActivity extends AppCompatActivity {
     }
 
     public CommandActivity createInvoice() {
+        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
+        if (getInvoice != null) {
+            assignInvoice(getInvoice);
+        } else {
+            addInvoice();
+        }
+        return this;
+    }
+
+    private CommandActivity assignInvoice(Factura getInvoice) {
+        invoice = getInvoice;
+        idInvoice = invoice.getId();
+        enabled = true;
+        return this;
+    }
+
+    private CommandActivity addInvoice() {
         long idEmp = Long.parseLong(IO.readPreferences(this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, KEY_DEFAULT_VALUE));
         Mesa table = getIntent().getParcelableExtra(KEY_TABLE);
         invoice = new Factura()
@@ -294,6 +320,39 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    private CommandActivity updateInvoice(float total) {
+        invoice.setId(idInvoice);
+        invoice.setTotal(total + invoice.getTotal());
+        invoice.setHoracierre("");
+        viewModel.invoiceViewModel.update(invoice);
+        return this;
+    }
+
+    private CommandActivity updateTableState() {
+        Intent intent = getIntent();
+        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
+        if (getInvoice == null) {
+            Mesa table = intent.getParcelableExtra(KEY_TABLE);
+            table.setEstado(OCCUPIED_TABLE);
+            Log.v("coommand", table.toString());
+            viewModel.tableViewModel.update(table);
+        }
+        return this;
+    }
+
+    private CommandActivity addCommands(List<Contenedor.CommandDetail> commandDetail) {
+        for (Contenedor.CommandDetail command : commandDetail) {
+            viewModel.commandViewModel.add(command.getCommand());
+        }
+        return this;
+    }
+
+    private CommandActivity endActivity() {
+        setResult(RESULT_OK);
+        finish();
+        return this;
+    }
+
     private CommandActivity assignEvents() {
         viewModel.getInvoiceId().observe(this, new Observer<Long>() {
             @Override
@@ -309,10 +368,12 @@ public class CommandActivity extends AppCompatActivity {
                         fetchCategoriesMap();
 
                 if (savedInstanceState == null) {
+                    sortProductsByName(ASC);
                     productAdapter.setData(products);
                 }
 
                 if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_PRODUCTS) != null) {
+                    sortProductsByName(ASC);
                     List<Producto> productos = savedInstanceState.getParcelableArrayList(KEY_PRODUCTS);
                     productAdapter.setData(productos);
                 }
@@ -332,25 +393,12 @@ public class CommandActivity extends AppCompatActivity {
             public boolean onLongClick(View v) {
                 List<Contenedor.CommandDetail> commandDetail = commandAdapter.getCommands();
                 if (commandDetail != null && !commandDetail.isEmpty() && enabled) {
-                    Intent intent = getIntent();
-                    float total = KEY_DEFAULT_PRICE;
-                    for (Contenedor.CommandDetail command : commandDetail) {
-                        total += command.getCommand().getPrecio();
-                    }
-                    invoice.setId(idInvoice);
-                    invoice.setTotal(total);
-                    invoice.setHoracierre("");
-                    viewModel.invoiceViewModel.update(invoice);
-                    Log.v("xyz", invoice.toString());
-                    Mesa table = intent.getParcelableExtra(KEY_TABLE);
-                    table.setEstado(OCCUPIED_TABLE);
-                    Log.v("coommand", table.toString());
-                    viewModel.tableViewModel.update(table);
-                    for (Contenedor.CommandDetail command : commandDetail) {
-                        viewModel.commandViewModel.add(command.getCommand());
-                    }
-                    setResult(RESULT_OK);
-                    finish();
+                    float total = getTotalPriceOfCommands();
+                    updateInvoice(total)
+                            .updateTableState()
+                            .addCommands(commandDetail)
+                            .endActivity();
+
                 } else {
                     Toast.makeText(CommandActivity.this, getString(R.string.unselectedProduct), Toast.LENGTH_SHORT).show();
                 }
@@ -509,12 +557,12 @@ public class CommandActivity extends AppCompatActivity {
         return filteredProducts;
     }
 
-    public String getTotalPriceOfCommands() {
-        float total = 0;
+    public float getTotalPriceOfCommands() {
+        float total = KEY_DEFAULT_PRICE;
         for (Contenedor.CommandDetail com : commandAdapter.getCommands()) {
             total += com.getCommand().getUnidades() * com.getProduct().getPrecio();
         }
-        return String.format(String.format(Locale.GERMAN, PRICE_FORMAT, total));
+        return total;
     }
 
     private CommandActivity initComponents() {
@@ -610,19 +658,19 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    private CommandActivity sortProductsByName() {
+    private CommandActivity sortProductsByName(final int critery) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             currentProducts.sort(new Comparator<Producto>() {
                 @Override
                 public int compare(Producto o1, Producto o2) {
-                    return o1.getNombre().compareTo(o2.getNombre());
+                    return o1.getNombre().compareTo(o2.getNombre()) * critery;
                 }
             });
         }
         return this;
     }
 
-    private CommandActivity sortProductsByPrice() {
+    private CommandActivity sortProductsByPrice(final int critery) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             currentProducts.sort(new Comparator<Producto>() {
                 @Override

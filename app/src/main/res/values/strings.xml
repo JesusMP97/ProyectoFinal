@@ -57,5 +57,16 @@
     <string name="totalClients">Clientes totales:</string>
     <string name="totalPrice">Precio total:</string>
     <string name="place">Zona:</string>
+    <string name="itPayment">Realizar Pago</string>
+    <string name="addCommand">Añadir Comandas</string>
+    <string name="seeCommands">Ver Comandas</string>
+    <string name="select">Seleccione una opción</string>
+    <string name="invoiceDeleted">Factura borrada</string>
+    <string name="des">Deshacer</string>
+    <string name="accept">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="print">¿Desea imprimir la factura?</string>
+    <string name="print2">Impresión</string>
+    <string name="document">document</string>
 
 </resources>

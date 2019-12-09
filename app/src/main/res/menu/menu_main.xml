@@ -8,19 +8,24 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
 
-
     <item
         android:id="@+id/itSort"
         android:icon="@drawable/ic_reorder_white_24dp"
         android:title="Item"
-        app:showAsAction="ifRoom">
+        app:showAsAction="ifRoom|withText">
         <menu>
             <item
-                android:id="@+id/subItName"
-                android:title="By Name" />
+                android:id="@+id/subItPrice"
+                android:title="By Price [A-Z]" />
             <item
-                android:id="@+id/subitem2"
-                android:title="By nose" />
+                android:id="@+id/subItPriceDes"
+                android:title="By Price [Z-A]" />
+            <item
+                android:id="@+id/subItTime"
+                android:title="By Time [A-Z]" />
+            <item
+                android:id="@+id/subItTimeDes"
+                android:title="By Time [Z-A]" />
         </menu>
     </item>
 </menu>

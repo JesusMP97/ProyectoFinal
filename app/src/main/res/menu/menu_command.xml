@@ -29,7 +29,10 @@
                         android:title="Agua" />
                 </menu>
             </item>
-            <item android:title="Comida" />
+            <item android:title="Entradas" />
+            <item android:title="Ensaladas" />
+            <item android:title="Pastas" />
+            <item android:title="Sopas" />
         </menu>
     </item>
     <item
@@ -40,10 +43,16 @@
         <menu>
             <item
                 android:id="@+id/subItName"
-                android:title="By Name" />
+                android:title="By Name [A-Z]" />
+            <item
+                android:id="@+id/subItNameDes"
+                android:title="By Name [Z-A]" />
             <item
                 android:id="@+id/subItPrice"
-                android:title="By price" />
+                android:title="By price [A-Z]" />
+            <item
+                android:id="@+id/subItPriceDes"
+                android:title="By price [Z-A]" />
         </menu>
     </item>
 </menu>

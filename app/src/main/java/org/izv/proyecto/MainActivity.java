@@ -12,10 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.print.PrintManager;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -33,23 +37,30 @@ import com.google.android.material.snackbar.Snackbar;
 import org.izv.circularfloatingbutton.FloatingActionButton;
 import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
+import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
+import org.izv.proyecto.model.data.Producto;
 import org.izv.proyecto.model.repository.Repository;
+import org.izv.proyecto.view.PrintDocument;
 import org.izv.proyecto.view.adapter.MainViewAdapter;
 import org.izv.proyecto.view.model.MainViewModel;
+import org.izv.proyecto.view.operations.BeforePayment;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
+import org.izv.proyecto.view.utils.Time;
 import org.izv.proyecto.view.utils.Tools;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
-
+    private static final int ASC = 1;
+    private static final int DESC = -1;
     private static final int DOUBLE_TABLE = 2;
     private static final String FILE_INVOICE = "invoice";
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
@@ -73,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xyz";
     private ActionMode actionMode;
     private MainViewAdapter adapter;
-    private boolean loading = true;
+    private boolean loading = true, commandsArrived, productsArrived;
     private AlertDialog mapDialog, loadingDialog;
     private SubActionButton btLogOut, btProfile, btSettings;
     private Mesa current;
@@ -84,14 +95,17 @@ public class MainActivity extends AppCompatActivity {
     private SearchView svSearch;
     private List<ImageView> tables;
     private Toolbar tb;
-    private String url;
+    private String url, search;
     private MainViewModel viewModel;
     private List<Mesa> tableList;
+    private List<Factura> invoiceList;
     private Bundle savedInstanceState;
     private ImageView ivLoading;
     private Splash splash;
     private TypedArray loadingBg;
-    private String search;
+    private Factura currentInvoice;
+    private List<Comanda> commands;
+    private List<Producto> products;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -179,11 +193,6 @@ public class MainActivity extends AppCompatActivity {
             outState.putBoolean(KEY_MAP_DIALOG, true);
         }
         String search = svSearch.getQuery().toString();
-//        if (!search.isEmpty()) {
-//            Log.v("OOPP","FILTEREDSDASADASADSDASA" + adapter.getInvoices());
-//            outState.putParcelableArrayList(KEY_INVOICES_FILTERED, (ArrayList<? extends Parcelable>) adapter.getInvoices());
-//
-//        }
         outState.putString(KEY_SEARCH, search);
         super.onSaveInstanceState(outState);
     }
@@ -195,8 +204,6 @@ public class MainActivity extends AppCompatActivity {
         MenuItem menuItem = menu.findItem(R.id.itSearch);
         svSearch = (SearchView) menuItem.getActionView();
         if (search != null && !search.isEmpty()) {
-            Log.v("MainActivity", "ENTRA");
-            Log.v("MainActivity", search);
             menuItem.expandActionView();
             svSearch.setQuery(search, true);
             svSearch.clearFocus();
@@ -217,22 +224,95 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    private MainActivity sortInvoicesByPrice(final int critery) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            invoiceList.sort(new Comparator<Factura>() {
+                @Override
+                public int compare(Factura f1, Factura f2) {
+                    return Float.compare(f1.getTotal(), f2.getTotal()) * critery;
+                }
+            });
+        }
+        return this;
+    }
+
+    private MainActivity sortInvoicesByTime(final int critery) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            invoiceList.sort(new Comparator<Factura>() {
+                @Override
+                public int compare(Factura f1, Factura f2) {
+                    return f1.getHorainicio().compareTo(f2.getHorainicio()) * critery;
+                }
+            });
+        }
+        return this;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.itSort:
+            case R.id.subItPrice:
+                sortInvoicesByPrice(ASC);
+                adapter.setData(invoiceList);
+                break;
+
+            case R.id.subItPriceDes:
+                sortInvoicesByPrice(DESC);
+                adapter.setData(invoiceList);
+                break;
+
+            case R.id.subItTime:
+                sortInvoicesByTime(ASC);
+                adapter.setTables(tableList);
+                break;
+
+            case R.id.subItTimeDes:
+                sortInvoicesByTime(DESC);
+                adapter.setData(invoiceList);
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public List<Comanda> getFilteredCommands() {
+        List<Comanda> filtered = new ArrayList<>();
+        for (Comanda command : commands) {
+            if (command.getIdfactura() == currentInvoice.getId()) {
+                filtered.add(command);
+            }
+        }
+        return filtered;
+    }
+
+    private MainActivity print() {
+        if (productsArrived && commandsArrived) {
+            List<Comanda> commands = getFilteredCommands();
+            PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
+            String jobName = this.getString(R.string.app_name) + " " + getString(R.string.document);
+            printManager.print(jobName, new PrintDocument(this, products, commands), null);
+        }
+        return this;
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.option_1:
-                Toast.makeText(this, "Option 1 selected", Toast.LENGTH_SHORT).show();
+            case R.id.itAdd:
+                if (currentInvoice != null) {
+                    startActivityFromResult();
+                }
+                Toast.makeText(this, getString(R.string.addCommand), Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.option_2:
-                Toast.makeText(this, "Option 2 selected", Toast.LENGTH_SHORT).show();
+            case R.id.itSee:
+                Toast.makeText(this, getString(R.string.seeCommands), Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.itPayment:
+                createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        print();
+                    }
+                });
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -251,6 +331,36 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity createDialog(String message, String
+            title, final BeforePayment beforePayment) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                beforePayment.doIt();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
+        });
+        builder.create().show();
+        return this;
+    }
+
+    private List<Factura> getFilteredInvoices(List<Factura> facturas) {
+        List<Factura> filtered = new ArrayList<>();
+        for (Factura invoice : facturas) {
+            if (invoice.getHoracierre().trim().isEmpty()) {
+                filtered.add(invoice);
+            }
+        }
+        return filtered;
+    }
+
     private MainActivity showConexionError() {
         Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         return this;
@@ -267,15 +377,32 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        viewModel.productViewModel.getAll().observe(this, new Observer<List<Producto>>() {
+            @Override
+            public void onChanged(List<Producto> productos) {
+                productsArrived = true;
+                products = productos;
+            }
+        });
+
+        viewModel.commandViewModel.getAll().observe(this, new Observer<List<Comanda>>() {
+            @Override
+            public void onChanged(List<Comanda> comandas) {
+                commandsArrived = true;
+                commands = comandas;
+            }
+        });
         viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
             @Override
             public void onChanged(List<Factura> facturas) {
+                List<Factura> filtered = getFilteredInvoices(facturas);
+                invoiceList = filtered;
                 if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) == null) {
-                    adapter.setData(facturas);
+                    adapter.setData(filtered);
                 }
                 if (savedInstanceState == null) {
-                    Log.v("OOPP", "3");
-                    adapter.setData(facturas);
+                    adapter.setData(filtered);
                 }
                 splash.setLoading(false);
             }
@@ -327,7 +454,8 @@ public class MainActivity extends AppCompatActivity {
         adapter.setContextMenuListener(new MainViewAdapter.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu menu, Factura invoice, int position) {
-                menu.setHeaderTitle(position + "");
+                currentInvoice = invoice;
+                menu.setHeaderTitle(getString(R.string.select));
                 getMenuInflater().inflate(R.menu.item_menu, menu);
             }
         });
@@ -350,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
         if (isFree(tableId)) {
             startActivityFromResult();
 //                    .startActivity();
-            Toast.makeText(this, getString(R.string.table) + " " + tableId + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.table) + " " + current.getNumero() + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
         } else {
             for (Mesa table : tableList) {
                 if (table.getId() == tableId) {
@@ -612,10 +740,20 @@ public class MainActivity extends AppCompatActivity {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE, invoice)
+                .putExtra(KEY_INVOICE, currentInvoice)
                 .putExtra(KEY_TABLE, current);
         startActivityForResult(intent, KEY_MAIN_INTENT);
         return this;
+    }
+
+    public Mesa getCurrentTable(Factura invoice) {
+        Mesa currentTable = new Mesa();
+        for (Mesa table : tableList) {
+            if (table.getId() == invoice.getIdmesa()) {
+                currentTable = table;
+            }
+        }
+        return currentTable;
     }
 
     private class ItemTouchHandler extends ItemTouchHelper.SimpleCallback {
@@ -638,15 +776,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             final Factura current = adapter.getInvoices().get(viewHolder.getAdapterPosition());
-            adapter.getInvoices().remove(viewHolder.getAdapterPosition());
-            adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+            current.setHoracierre(null);
+            final Mesa currentTable = getCurrentTable(current);
+            currentTable.setEstado(FREE_TABLE);
+            viewModel.invoiceViewModel.delete(current);
+            viewModel.tableViewModel.update(currentTable);
             View parentLayout = findViewById(android.R.id.content);
-            Snackbar.make(parentLayout, "Factura borrada", Snackbar.LENGTH_LONG)
-                    .setAction("Deshacer", new View.OnClickListener() {
+            Snackbar.make(parentLayout, getString(R.string.invoiceDeleted), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.des), new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            adapter.getInvoices().add(current);
-                            adapter.notifyDataSetChanged();
+                            currentTable.setEstado(OCCUPIED_TABLE);
+                            viewModel.tableViewModel.update(currentTable);
+                            viewModel.invoiceViewModel.add(current);
                         }
                     })
                     .show();
