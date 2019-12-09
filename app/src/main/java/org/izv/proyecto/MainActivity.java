@@ -352,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.itAdd:
-                startActivityFromResult();
+                startActivityFromResult(currentInvoice);
                 break;
             case R.id.itSee:
                 Intent intent = new Intent(this, SeeCommandActivity.class);
@@ -591,7 +591,7 @@ public class MainActivity extends AppCompatActivity {
     private MainActivity checkTableState(ImageView iv) {
         long tableId = Long.parseLong(iv.getContentDescription().toString());
         if (isFree(tableId)) {
-            startActivityFromResult();
+            startActivityFromResult(null);
 //                    .startActivity();
             Toast.makeText(this, getString(R.string.table) + " " + current.getNumero() + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
         } else {
@@ -951,12 +951,12 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    private MainActivity startActivityFromResult() {
+    private MainActivity startActivityFromResult(Factura invoice) {
         if (actionMode != null) {
             actionMode.finish();
         }
         Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE, currentInvoice)
+                .putExtra(KEY_INVOICE, invoice)
                 .putExtra(KEY_TABLE, current);
         startActivityForResult(intent, KEY_MAIN_INTENT);
         return this;
