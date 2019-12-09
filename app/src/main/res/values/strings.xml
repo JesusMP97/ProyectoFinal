@@ -67,6 +67,10 @@
     <string name="cancel">Cancelar</string>
     <string name="print">¿Desea imprimir la factura?</string>
     <string name="print2">Impresión</string>
+    <string name="send">¿Desea compartir la factura?</string>
+    <string name="send2">Compartir</string>
     <string name="document">document</string>
+    <string name="share">Share PDF file</string>
+    <string name="shareError">Error, no se ha podido enviar.</string>
 
 </resources>

@@ -16,11 +16,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.print.PrintManager;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -49,9 +50,9 @@ import org.izv.proyecto.view.operations.BeforePayment;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
-import org.izv.proyecto.view.utils.Time;
 import org.izv.proyecto.view.utils.Tools;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_SEARCH = "search";
     private static final int SINGLE_TABLE = 1;
     private static final String TAG = "xyz";
+    private static final String INTENT_TYPE = "application/pdf";
     private ActionMode actionMode;
     private MainViewAdapter adapter;
     private boolean loading = true, commandsArrived, productsArrived;
@@ -284,12 +286,36 @@ public class MainActivity extends AppCompatActivity {
         return filtered;
     }
 
+    private File getInvoicePdf() {
+        File file = null;
+        if (productsArrived && commandsArrived) {
+            List<Comanda> commands = getFilteredCommands();
+            PrintDocument printDocument = new PrintDocument(this, products, commands);
+            file = printDocument.createPdf();
+        }
+        return file;
+    }
+
     private MainActivity print() {
         if (productsArrived && commandsArrived) {
             List<Comanda> commands = getFilteredCommands();
             PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
             String jobName = this.getString(R.string.app_name) + " " + getString(R.string.document);
-            printManager.print(jobName, new PrintDocument(this, products, commands), null);
+            PrintDocument printDocument = new PrintDocument(this, products, commands);
+            printManager.print(jobName, printDocument, null);
+        }
+        return this;
+    }
+
+    private MainActivity sendPdf() {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType(INTENT_TYPE);
+        Uri uri = Uri.parse(getInvoicePdf().getAbsolutePath());
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.share)));
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), getString(R.string.shareError), Toast.LENGTH_SHORT).show();
         }
         return this;
     }
@@ -302,10 +328,18 @@ public class MainActivity extends AppCompatActivity {
                     startActivityFromResult();
                 }
                 Toast.makeText(this, getString(R.string.addCommand), Toast.LENGTH_SHORT).show();
-                return true;
+                break;
             case R.id.itSee:
                 Toast.makeText(this, getString(R.string.seeCommands), Toast.LENGTH_SHORT).show();
-                return true;
+                break;
+            case R.id.itSend:
+                createDialog(getString(R.string.send), getString(R.string.send2), new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        sendPdf();
+                    }
+                });
+                break;
             case R.id.itPayment:
                 createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
                     @Override
@@ -313,10 +347,9 @@ public class MainActivity extends AppCompatActivity {
                         print();
                     }
                 });
-                return true;
-            default:
-                return super.onContextItemSelected(item);
+                break;
         }
+        return super.onContextItemSelected(item);
     }
 
     private MainActivity assignDialogEvents() {
@@ -456,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
             public void onCreateContextMenu(ContextMenu menu, Factura invoice, int position) {
                 currentInvoice = invoice;
                 menu.setHeaderTitle(getString(R.string.select));
-                getMenuInflater().inflate(R.menu.item_menu, menu);
+                getMenuInflater().inflate(R.menu.invoice_menu, menu);
             }
         });
         adapter.setOnClickListener(new MainViewAdapter.OnClickListener() {

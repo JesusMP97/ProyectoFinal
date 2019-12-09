@@ -34,10 +34,10 @@ import java.util.List;
 @RequiresApi(api = Build.VERSION_CODES.KITKAT)
 public class PrintDocument extends PrintDocumentAdapter {
     Context context;
-    private String NIF = "10511415N";
-    private String NOMBRE = "Jones Garcia, Francisco";
-    private String DIRECCION = "C/ Alameda, 8   Granada";
-    private String TELEFONO = "658012345";
+    private static String NIF = "10511415N";
+    private static String NOMBRE = "Jones Garcia, Francisco";
+    private static String DIRECCION = "C/ Alameda, 8   Granada";
+    private static String TELEFONO = "658012345";
     private int pageHeight;
     private int pageWidth;
     private PdfDocument myPdfDocument;
@@ -269,6 +269,7 @@ public class PrintDocument extends PrintDocumentAdapter {
 
                 // Nombre producto
                 paint.setTextSize(24);
+
                 canvas.drawText(
                         productos.get(i).getNombre(),
                         leftMargin + 100,
@@ -300,7 +301,7 @@ public class PrintDocument extends PrintDocumentAdapter {
         }
     }
 
-    public File createPdf(Context context) { // METODO PARA CREAR Y ENVIAR PDF DE LA FACTURA
+    public File createPdf() { // METODO PARA CREAR Y ENVIAR PDF DE LA FACTURA
         int totalpages = 1 + (comandas.size() + 24 - 1) / 24;
         int rest = comandas.size() % 24;
         int pageWidth = 600;
@@ -462,8 +463,9 @@ public class PrintDocument extends PrintDocumentAdapter {
 
                 // Nombre producto
                 paint.setTextSize(24);
+
                 canvas.drawText(
-                        productos.get(j).getNombre(),
+                        productos.get(i).getNombre(),
                         leftMargin + 100,
                         topMargin,
                         paint);

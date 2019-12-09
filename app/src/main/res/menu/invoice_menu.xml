@@ -7,6 +7,9 @@
         android:id="@+id/itSee"
         android:title="Ver Comandas" />
     <item
+        android:id="@+id/itSend"
+        android:title="Compartir Factura" />
+    <item
         android:id="@+id/itPayment"
         android:title="Realizar Pago" />
 </menu>
