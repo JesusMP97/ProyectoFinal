@@ -4,28 +4,28 @@
     <item
         android:id="@+id/itSearch"
         android:icon="@drawable/ic_search_white_24dp"
-        android:title="Search"
+        android:title="@string/search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/itSort"
         android:icon="@drawable/ic_reorder_white_24dp"
-        android:title="Item"
+        android:title="@string/sort"
         app:showAsAction="ifRoom|withText">
         <menu>
             <item
                 android:id="@+id/subItPrice"
-                android:title="By Price [A-Z]" />
+                android:title="@string/byPriceAsc" />
             <item
                 android:id="@+id/subItPriceDes"
-                android:title="By Price [Z-A]" />
+                android:title="@string/byPriceDesc" />
             <item
                 android:id="@+id/subItTime"
-                android:title="By Time [A-Z]" />
+                android:title="@string/byTimeAsc" />
             <item
                 android:id="@+id/subItTimeDes"
-                android:title="By Time [Z-A]" />
+                android:title="@string/byTimeDesc" />
         </menu>
     </item>
 </menu>

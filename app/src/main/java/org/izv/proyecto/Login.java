@@ -48,8 +48,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class Login extends AppCompatActivity {
-    public static final String FILE_LOGIN = "login";
-    public static final String KEY_LOGIN_ID = "id";
+    private static final String FILE_LOGIN = "login";
+    private static final String KEY_LOGIN_ID = "id";
     private static final long FIELD_VISIBILITY_DELAY = 100;
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final String KEY_DEFAULT_VALUE = "0";
@@ -289,7 +289,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    public Login initAnimations() {
+    private Login initAnimations() {
         btLogin.startAnimation(initApp);
         ilUserName.startAnimation(initApp);
         ilPassword.startAnimation(initApp);

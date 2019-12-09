@@ -72,5 +72,26 @@
     <string name="document">document</string>
     <string name="share">Share PDF file</string>
     <string name="shareError">Error, no se ha podido enviar.</string>
+    <string name="dash">-</string>
+    <string name="sendInvoice">Compartir factura</string>
+    <string name="search">Search</string>
+    <string name="filter">Filter</string>
+    <string name="drinks">Bebidas</string>
+    <string name="refreshments">Refrescos</string>
+    <string name="beer">Cerveza</string>
+    <string name="water">Agua</string>
+    <string name="entries">Entradas</string>
+    <string name="salads">Ensaladas</string>
+    <string name="pastes">Pastas</string>
+    <string name="soups">Sopas</string>
+    <string name="sort">Sort</string>
+    <string name="byNameAsc">By Name [A-Z]</string>
+    <string name="byNameDesc">By Name [Z-A]</string>
+    <string name="byPriceAsc">By price [A-Z]</string>
+    <string name="byPriceDesc">By price [Z-A]</string>
+    <string name="byTimeAsc">By Time [A-Z]</string>
+    <string name="byTimeDesc">By Time [Z-A]</string>
+    <string name="link">Unir</string>
+    <string name="coma">,</string>
 
 </resources>

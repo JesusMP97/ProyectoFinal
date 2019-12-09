@@ -4,55 +4,55 @@
     <item
         android:id="@+id/itSearch"
         android:icon="@drawable/ic_search_white_24dp"
-        android:title="Search"
+        android:title="@string/search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/itFilter"
         android:icon="@drawable/ic_filter_list_white_24dp"
-        android:title="Filter"
+        android:title="@string/filter"
         app:showAsAction="always|withText">
         <menu>
             <item
                 android:id="@+id/itBebidas"
-                android:title="Bebidas">
+                android:title="@string/drinks">
                 <menu>
                     <item
                         android:id="@+id/sbItRefrescos"
-                        android:title="Refrescos" />
+                        android:title="@string/refreshments" />
                     <item
                         android:id="@+id/sbItCerveza"
-                        android:title="Cerveza" />
+                        android:title="@string/beer" />
                     <item
                         android:id="@+id/sbItAgua"
-                        android:title="Agua" />
+                        android:title="@string/water" />
                 </menu>
             </item>
-            <item android:title="Entradas" />
-            <item android:title="Ensaladas" />
-            <item android:title="Pastas" />
-            <item android:title="Sopas" />
+            <item android:title="@string/entries" />
+            <item android:title="@string/salads" />
+            <item android:title="@string/pastes" />
+            <item android:title="@string/soups" />
         </menu>
     </item>
     <item
         android:id="@+id/itSort"
         android:icon="@drawable/ic_reorder_white_24dp"
-        android:title="Item"
+        android:title="@string/sort"
         app:showAsAction="ifRoom|withText">
         <menu>
             <item
                 android:id="@+id/subItName"
-                android:title="By Name [A-Z]" />
+                android:title="@string/byNameAsc" />
             <item
                 android:id="@+id/subItNameDes"
-                android:title="By Name [Z-A]" />
+                android:title="@string/byNameDesc" />
             <item
                 android:id="@+id/subItPrice"
-                android:title="By price [A-Z]" />
+                android:title="@string/byPriceAsc" />
             <item
                 android:id="@+id/subItPriceDes"
-                android:title="By price [Z-A]" />
+                android:title="@string/byPriceDesc" />
         </menu>
     </item>
 </menu>

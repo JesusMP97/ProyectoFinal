@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/itAdd"
-        android:title="Añadir Comandas" />
+        android:title="@string/addCommand" />
     <item
         android:id="@+id/itSee"
-        android:title="Ver Comandas" />
+        android:title="@string/seeCommands" />
     <item
         android:id="@+id/itSend"
-        android:title="Compartir Factura" />
+        android:title="@string/sendInvoice" />
     <item
         android:id="@+id/itPayment"
-        android:title="Realizar Pago" />
+        android:title="@string/itPayment" />
 </menu>

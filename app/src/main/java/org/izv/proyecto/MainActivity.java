@@ -12,16 +12,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
-import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.print.PrintManager;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -29,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -43,38 +45,47 @@ import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Mesa;
 import org.izv.proyecto.model.data.Producto;
 import org.izv.proyecto.model.repository.Repository;
-import org.izv.proyecto.view.PrintDocument;
 import org.izv.proyecto.view.adapter.MainViewAdapter;
 import org.izv.proyecto.view.model.MainViewModel;
 import org.izv.proyecto.view.operations.BeforePayment;
+import org.izv.proyecto.view.print.PrintDocument;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
+import org.izv.proyecto.view.utils.Time;
 import org.izv.proyecto.view.utils.Tools;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
+    private static final String FILE_LOGIN = "login";
+    private static final String KEY_LOGIN_ID = "id";
     private static final int ASC = 1;
     private static final int DESC = -1;
     private static final int DOUBLE_TABLE = 2;
+    private static final int FIRST_ELEMENT = 0;
+    private static final long EMPTY = 0;
     private static final String FILE_INVOICE = "invoice";
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final int FREE_TABLE = 1;
     private static final long HORIZONTAL_TABLE_ID = 7;
     private static final String KEY_ACTION_MODE = "actionmode";
     private static final String KEY_DEFAULT_VALUE = "0";
+    private static final String KEY_HISTORY = "history";
     private static final String KEY_INVOICE = "invoice";
     private static final String KEY_INVOICES_FILTERED = "invoicesFiltered";
     private static final String KEY_INVOICE_ID = "invoiceId";
     private static final int KEY_MAIN_INTENT = 1;
     private static final String KEY_TABLE = "table";
     private static final String KEY_URL = "url";
+    private static final long MAIN_DEFAULT_VALUE = 0;
+    private static final long NO_EMPTY = 1;
     private static final int OCCUPIED_TABLE = 0;
     private static final int OCTA_TABLE = 8;
     private static final int QUADRUPLE_TABLE = 4;
@@ -88,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private MainViewAdapter adapter;
     private boolean loading = true, commandsArrived, productsArrived;
     private AlertDialog mapDialog, loadingDialog;
-    private SubActionButton btLogOut, btProfile, btSettings;
+    private SubActionButton btLogOut, btHistory, btSettings;
     private Mesa current;
     private FloatingActionButton fab;
     private Factura invoice;
@@ -108,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
     private Factura currentInvoice;
     private List<Comanda> commands;
     private List<Producto> products;
+    private static final String DEFAULT_VALUE = "0";
+    private List<Long> deletedIds = new ArrayList<>();
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -276,11 +289,26 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public List<Comanda> getFilteredCommands() {
+    private List<Comanda> getFilteredCommands() {
         List<Comanda> filtered = new ArrayList<>();
         for (Comanda command : commands) {
             if (command.getIdfactura() == currentInvoice.getId()) {
                 filtered.add(command);
+            }
+        }
+        return filtered;
+    }
+
+    private List<Comanda> getFilteredCommands(List<Factura> invoices, Factura main) {
+        List<Comanda> filtered = new ArrayList<>();
+        for (Factura invoice : invoices) {
+            if (invoice.getId() != main.getId()) {
+                for (Comanda command : commands) {
+                    if (command.getIdfactura() == invoice.getId()) {
+                        command.setIdfactura(main.getId());
+                        filtered.add(command);
+                    }
+                }
             }
         }
         return filtered;
@@ -324,13 +352,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.itAdd:
-                if (currentInvoice != null) {
-                    startActivityFromResult();
-                }
-                Toast.makeText(this, getString(R.string.addCommand), Toast.LENGTH_SHORT).show();
+                startActivityFromResult();
                 break;
             case R.id.itSee:
-                Toast.makeText(this, getString(R.string.seeCommands), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, SeeCommandActivity.class);
+                startActivity(intent);
                 break;
             case R.id.itSend:
                 createDialog(getString(R.string.send), getString(R.string.send2), new BeforePayment() {
@@ -338,19 +364,68 @@ public class MainActivity extends AppCompatActivity {
                     public void doIt() {
                         sendPdf();
                     }
-                });
+                }, null);
                 break;
             case R.id.itPayment:
                 createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
                     @Override
                     public void doIt() {
-                        print();
+                        print()
+                                .deleteCommands()
+                                .updateTableState()
+                                .finishInvoice();
+                    }
+                }, new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        deleteCommands()
+                                .updateTableState()
+                                .finishInvoice();
                     }
                 });
                 break;
         }
         return super.onContextItemSelected(item);
     }
+
+    private MainActivity deleteCommands() {
+        List<Comanda> commands = getFilteredCommands();
+        for (Comanda command : commands) {
+            viewModel.commandViewModel.delete(command);
+        }
+        return this;
+    }
+
+    private MainActivity updateTableState() {
+        Mesa mainTable = new Mesa();
+        for (Mesa table : tableList) {
+            if (table.getId() == currentInvoice.getIdmesa()) {
+                if (table.getMesaprincipal() == table.getId()) {
+                    mainTable = table;
+                } else {
+                    table.setEstado(FREE_TABLE);
+                    viewModel.tableViewModel.update(table);
+                }
+            }
+        }
+        for (Mesa table : tableList) {
+            if (table.getMesaprincipal() == mainTable.getId()) {
+                table.setEstado(FREE_TABLE);
+                table.setMesaprincipal(MAIN_DEFAULT_VALUE);
+                viewModel.tableViewModel.update(table);
+            }
+        }
+        return this;
+    }
+
+    private MainActivity finishInvoice() {
+        long idEmp = Long.parseLong(IO.readPreferences(this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
+        currentInvoice.setIdempleadocierre(idEmp);
+        currentInvoice.setHoracierre(Time.getCurrentTime());
+        viewModel.invoiceViewModel.update(currentInvoice);
+        return this;
+    }
+
 
     private MainActivity assignDialogEvents() {
         for (final ImageView iv : tables) {
@@ -365,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MainActivity createDialog(String message, String
-            title, final BeforePayment beforePayment) {
+            title, final BeforePayment beforePayment, final BeforePayment pay) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
         builder.setMessage(message);
@@ -377,6 +452,7 @@ public class MainActivity extends AppCompatActivity {
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
+                pay.doIt();
                 dialog.cancel();
             }
         });
@@ -474,6 +550,12 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        btHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePickerDialog();
+            }
+        });
         btSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -506,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    public MainActivity checkTableState(ImageView iv) {
+    private MainActivity checkTableState(ImageView iv) {
         long tableId = Long.parseLong(iv.getContentDescription().toString());
         if (isFree(tableId)) {
             startActivityFromResult();
@@ -533,6 +615,78 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity orderTablesById(List<Mesa> tableList) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            tableList.sort(new Comparator<Mesa>() {
+                @Override
+                public int compare(Mesa o1, Mesa o2) {
+                    return Long.compare(o1.getId(), o2.getId());
+                }
+            });
+        }
+        return this;
+    }
+
+    private List<Factura> getInvoicesFiltered() {
+        List<Factura> invoices = adapter.getInvoices();
+        List<Factura> filtered = new ArrayList<>();
+        for (Factura invoice : invoices) {
+            if (invoice.isSelected())
+                filtered.add(invoice);
+        }
+        return filtered;
+    }
+
+    private List<Mesa> getTablesFiltered(List<Factura> filtered) {
+        List<Mesa> tableFiltered = new ArrayList<>();
+        for (Mesa table : tableList) {
+            for (Factura invoice : filtered) {
+                if (table.getId() == invoice.getIdmesa()) {
+                    tableFiltered.add(table);
+                }
+            }
+        }
+        orderTablesById(tableFiltered);
+        return tableFiltered;
+    }
+
+    private Factura getMainInvoice(List<Factura> filtered, Mesa tableMain) {
+        Factura main = new Factura();
+        for (Factura invoice : filtered) {
+            if (invoice.getIdmesa() == tableMain.getId()) {
+                main = invoice;
+            }
+        }
+        return main;
+    }
+
+    private MainActivity updateTables(List<Mesa> filtered, Mesa tableMain) {
+        for (Mesa table : filtered) {
+            table.setMesaprincipal(tableMain.getId());
+            viewModel.tableViewModel.update(table);
+        }
+        return this;
+    }
+
+    private MainActivity updateInvoice(List<Factura> filtered, Factura main) {
+        for (Factura invoice : filtered) {
+            if (invoice != main) {
+                long idEmp = Long.parseLong(IO.readPreferences(MainActivity.this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
+                invoice.setIdempleadocierre(idEmp);
+                invoice.setHoracierre(Time.getCurrentTime());
+                viewModel.invoiceViewModel.update(invoice);
+            }
+        }
+        return this;
+    }
+
+    private MainActivity updateCommands(List<Factura> filtered, Factura main) {
+        List<Comanda> filteredCommands = getFilteredCommands(filtered, main);
+        for (Comanda command : filteredCommands) {
+            viewModel.commandViewModel.update(command);
+        }
+        return this;
+    }
 
     private void enableActionMode(final int position) {
         if (actionMode == null)
@@ -551,9 +705,16 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                    if (item.getItemId() == R.id.action_delete) {
-                        adapter.deleteCommands();
-                        mode.finish();
+                    if (item.getItemId() == R.id.link) {
+                        List<Factura> invoicesFiltered = getInvoicesFiltered();
+                        List<Mesa> tableFiltered = getTablesFiltered(invoicesFiltered);
+                        Mesa tableMain = tableFiltered.get(FIRST_ELEMENT);
+                        Factura main = getMainInvoice(invoicesFiltered, tableMain);
+                        updateCommands(invoicesFiltered, main)
+                                .updateTables(tableFiltered, tableMain)
+                                .updateInvoice(invoicesFiltered, main);
+
+                        actionMode.finish();
                         return true;
                     }
                     return false;
@@ -569,14 +730,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                     adapter.notifyDataSetChanged();
                     actionMode = null;
-                    savedInstanceState = null;
                     Tools.setSystemBarColor(MainActivity.this, R.color.colorPrimaryDark);
                 }
             });
 
         adapter.toggleSelection(position);
         final int size = adapter.getSelectedItems().size();
-        if (size == 0) {
+        if (size == EMPTY) {
             actionMode.finish();
         } else {
             actionMode.setTitle(String.valueOf(size));
@@ -657,13 +817,47 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private List<Factura> filterFacturas(String date) {
+        List<Factura> filtered = new ArrayList<>();
+        for (int i = 0; i < invoiceList.size(); i++) {
+            if (invoiceList.get(i).getHorainicio().contains(date)) {
+                filtered.add(invoiceList.get(i));
+            }
+        }
+        return filtered;
+    }
+
+    private void sendToHistory(String date) {
+        Intent intent = new Intent(this, HistoryActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(KEY_HISTORY, (ArrayList<? extends Parcelable>) filterFacturas(date));
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    private MainActivity showDatePickerDialog() {
+        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                Calendar c = Calendar.getInstance();
+                c.set(Calendar.YEAR, year);
+                c.set(Calendar.MONTH, month);
+                c.set(Calendar.DAY_OF_MONTH, day);
+                final String selectedDate = day + getString(R.string.dash) + (month + 1) + getString(R.string.dash) + year;
+                sendToHistory(selectedDate);
+            }
+        });
+        newFragment.show(this.getSupportFragmentManager(), null);
+        return this;
+    }
+
     private MainActivity initFabComponents() {
         ImageView ivFab = new ImageView(this);
         ivFab.setImageDrawable(getDrawable(R.drawable.ic_add_black_36dp));
         ImageView ivLogOut = new ImageView(this);
         ivLogOut.setImageDrawable(getDrawable(R.drawable.ic_exit_to_app_black_24dp));
-        ImageView ivProfile = new ImageView(this);
-        ivProfile.setImageDrawable(getDrawable(R.drawable.ic_profile_black_24dp));
+        ImageView ivHistory = new ImageView(this);
+        ivHistory.setImageDrawable(getDrawable(R.drawable.ic_history_black_24dp));
         ImageView ivSettings = new ImageView(this);
         ivSettings.setImageDrawable(getDrawable(R.drawable.ic_settings_black_24dp));
         fab = new FloatingActionButton.Builder(this)
@@ -672,11 +866,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setEnabled(false);
         SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
         btLogOut = itemBuilder.setContentView(ivLogOut).build();
-        btProfile = itemBuilder.setContentView(ivProfile).build();
+        btHistory = itemBuilder.setContentView(ivHistory).build();
         btSettings = itemBuilder.setContentView(ivSettings).build();
         new FloatingActionMenu.Builder(this)
                 .addSubActionView(btLogOut)
-                .addSubActionView(btProfile)
+                .addSubActionView(btHistory)
                 .addSubActionView(btSettings)
                 .attachTo(fab)
                 .build();
@@ -757,17 +951,6 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    private MainActivity startActivity() {
-        if (actionMode != null) {
-            actionMode.finish();
-        }
-        Intent intent = new Intent(this, CommandActivity.class)
-                .putExtra(KEY_INVOICE, invoice)
-                .putExtra(KEY_TABLE, current);
-        startActivity(intent);
-        return this;
-    }
-
     private MainActivity startActivityFromResult() {
         if (actionMode != null) {
             actionMode.finish();
@@ -797,13 +980,31 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-            int from = viewHolder.getAdapterPosition();
-            int to = target.getAdapterPosition();
-
-            Collections.swap(adapter.getInvoices(), from, to);
-            adapter.notifyItemMoved(from, to);
-
             return true;
+        }
+
+        private void updateTableState(Mesa table, List<Mesa> tables, int state, long idTable) {
+            List<Long> ids = deletedIds;
+            deletedIds = new ArrayList<>();
+            int cont = 0;
+            if (table.getMesaprincipal() > EMPTY) {
+                for (Mesa current : tables) {
+                    if (current.getMesaprincipal() == table.getMesaprincipal()) {
+                        deletedIds.add(current.getMesaprincipal());
+                        current.setEstado(state);
+                        if (idTable > EMPTY) {
+                            current.setMesaprincipal(ids.get(cont));
+                        } else {
+                            current.setMesaprincipal(idTable);
+                        }
+                        viewModel.tableViewModel.update(current);
+                        cont++;
+                    }
+                }
+            } else {
+                table.setEstado(state);
+                viewModel.tableViewModel.update(table);
+            }
         }
 
         @Override
@@ -811,16 +1012,14 @@ public class MainActivity extends AppCompatActivity {
             final Factura current = adapter.getInvoices().get(viewHolder.getAdapterPosition());
             current.setHoracierre(null);
             final Mesa currentTable = getCurrentTable(current);
-            currentTable.setEstado(FREE_TABLE);
+            updateTableState(currentTable, tableList, FREE_TABLE, EMPTY);
             viewModel.invoiceViewModel.delete(current);
-            viewModel.tableViewModel.update(currentTable);
             View parentLayout = findViewById(android.R.id.content);
-            Snackbar.make(parentLayout, getString(R.string.invoiceDeleted), Snackbar.LENGTH_LONG)
+            Snackbar.make(parentLayout, getString(R.string.invoiceDeleted), Snackbar.LENGTH_SHORT)
                     .setAction(getString(R.string.des), new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            currentTable.setEstado(OCCUPIED_TABLE);
-                            viewModel.tableViewModel.update(currentTable);
+                            updateTableState(currentTable, tableList, OCCUPIED_TABLE, NO_EMPTY);
                             viewModel.invoiceViewModel.add(current);
                         }
                     })

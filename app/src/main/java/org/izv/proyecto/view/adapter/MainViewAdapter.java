@@ -42,23 +42,19 @@ import java.util.regex.Pattern;
 
 public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHolder> implements Filterable {
     private static final String FORMAT = "HH:mm";
-    private static final long LAST_TABLE_POSITION = 15;
+    private static final long EMPTY = 0;
     private static Context context;
     private OnCreateContextMenuListener contextMenuListener;
     private int currentSelectedPos;
     private MainViewAdapterFilter filter;
     private LayoutInflater inflater;
-    private List<Factura> invoices, invoicesAll, invoicesFiltered;
+    private List<Factura> invoices, invoicesAll;
     private OnClickListener onClickListener;
     private SparseBooleanArray selectedItems;
     private List<Mesa> tables;
     private static String search = "";
     private SpannableStringBuilder fullText;
     private int position;
-
-    public List<Factura> getInvoicesFiltered() {
-        return invoicesFiltered;
-    }
 
     public MainViewAdapter(Context context) {
         filter = new MainViewAdapterFilter();
@@ -83,14 +79,38 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         item.setText(highlightSearchText(fullText, search));
     }
 
-    public String getTableType(long id) {
-        String tableType = "";
-        if (id <= LAST_TABLE_POSITION) {
-            tableType = context.getString(R.string.table);
+    private String getTableNumbers(Mesa table, List<Mesa> tables) {
+        String tableNumbers = "  ";
+        if (table.getMesaprincipal() > 0) {
+            if (table.getMesaprincipal() == table.getId()) {
+                tableNumbers += table.getNumero() + context.getString(R.string.coma) + " ";
+                for (Mesa current : tables) {
+                    if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
+                        tableNumbers += current.getNumero() + context.getString(R.string.coma) + " ";
+                    }
+                }
+            }
         } else {
-            tableType = context.getString(R.string.bar);
+            tableNumbers += table.getNumero() + context.getString(R.string.coma) + " ";
         }
-        return tableType;
+        return tableNumbers.substring(0, tableNumbers.length() - 2);
+    }
+
+    private long getTotalClients(Mesa table, List<Mesa> tables){
+        long total = EMPTY;
+        if (table.getMesaprincipal() > EMPTY) {
+            if (table.getMesaprincipal() == table.getId()) {
+                total = table.getCapacidad();
+                for (Mesa current : tables) {
+                    if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
+                        total += table.getCapacidad();
+                    }
+                }
+            }
+        } else {
+            total = table.getCapacidad();
+        }
+        return total;
     }
 
 
@@ -104,9 +124,9 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             holder.bind(current);
             String place = context.getString(R.string.place) + " " + currentTable.getZona();
             bindItem(holder.tvItemPlace, place);
-            String tableNumber = getTableType(current.getIdmesa()) + " " + currentTable.getNumero();
+            String tableNumber = context.getString(R.string.table) + " " + getTableNumbers(currentTable, tables).trim();
             bindItem(holder.tvItemDestination, tableNumber);
-            String clients = context.getString(R.string.totalClients) + " " + currentTable.getCapacidad();
+            String clients = context.getString(R.string.totalClients) + " " + getTotalClients(currentTable, tables);
             bindItem(holder.tvItemTotalClients, clients);
             String startUpTime = Time.getTimeFormatted(FORMAT, current.getHorainicio());
             bindItem(holder.tvItemStartUpTime, startUpTime);
@@ -134,8 +154,6 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
                     contextMenuListener.onCreateContextMenu(menu, current, position);
                 }
             });
-        } else {
-            //holder.tvTableNumber.setText("No user available");
         }
         if (currentSelectedPos == position) currentSelectedPos = -1;
     }
@@ -282,7 +300,6 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
                 search = charSequence.toString();
                 filtered.addAll(invoicesAll);
             } else {
-                Log.v("MainActivity","ENTREASSADDASSDDAS");
                 for (Factura invoice : invoicesAll) {
                     String totalPrice = context.getString(R.string.totalPrice) + " " + invoice.getTotal() + context.getString(R.string.euro);
                     add(invoice, totalPrice, charSequence.toString(), filtered);
@@ -290,11 +307,11 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
                     add(invoice, startUpTime, charSequence.toString(), filtered);
                     for (Mesa table : tables) {
                         if (table.getId() == invoice.getIdmesa()) {
-                            String tableNumber = getTableType(invoice.getIdmesa()) + " " + table.getNumero();
+                            String tableNumber = context.getString(R.string.table) + " " + getTableNumbers(table, tables);
                             add(invoice, tableNumber, charSequence.toString(), filtered);
                             String place = context.getString(R.string.place) + " " + table.getZona();
                             add(invoice, place, charSequence.toString(), filtered);
-                            String clients = context.getString(R.string.totalClients) + " " + table.getCapacidad();
+                            String clients = context.getString(R.string.totalClients) + " " + getTotalClients(table, tables);
                             add(invoice, clients, charSequence.toString(), filtered);
                         }
                     }

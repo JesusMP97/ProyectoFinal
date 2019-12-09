@@ -1,4 +1,4 @@
-package org.izv.proyecto.view;
+package org.izv.proyecto.view.print;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -269,9 +269,14 @@ public class PrintDocument extends PrintDocumentAdapter {
 
                 // Nombre producto
                 paint.setTextSize(24);
-
+                Producto p = new Producto();
+                for (Producto product : productos) {
+                    if (comandas.get(i).getIdproducto() == product.getId()) {
+                        p = product;
+                    }
+                }
                 canvas.drawText(
-                        productos.get(i).getNombre(),
+                        p.getNombre(),
                         leftMargin + 100,
                         topMargin,
                         paint);
@@ -463,9 +468,14 @@ public class PrintDocument extends PrintDocumentAdapter {
 
                 // Nombre producto
                 paint.setTextSize(24);
-
+                Producto p = new Producto();
+                for (Producto product : productos) {
+                    if (comandas.get(j).getIdproducto() == product.getId()) {
+                        p = product;
+                    }
+                }
                 canvas.drawText(
-                        productos.get(i).getNombre(),
+                        p.getNombre(),
                         leftMargin + 100,
                         topMargin,
                         paint);

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    android:background="#EDDFF7">
+
+    <TextView
+        android:id="@+id/tvIdFactura"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#DFB3FC"
+        android:gravity="center"
+        android:text="Factura: 00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:background="#65000000"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/barrier3" />
+
+    <TextView
+        android:id="@+id/tvIdMesa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00"
+        app:layout_constraintEnd_toEndOf="@+id/tvHMesa"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/tvHMesa"
+        app:layout_constraintTop_toBottomOf="@+id/view" />
+
+    <TextView
+        android:id="@+id/tvHoraInicio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12:00 01/01/2000"
+        app:layout_constraintEnd_toEndOf="@+id/tvHHora"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/tvHHora"
+        app:layout_constraintTop_toBottomOf="@+id/view" />
+
+    <TextView
+        android:id="@+id/tvHoraCierre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12:00 01/01/2000"
+        app:layout_constraintEnd_toEndOf="@+id/tvHoraInicio"
+        app:layout_constraintStart_toStartOf="@+id/tvHoraInicio"
+        app:layout_constraintTop_toBottomOf="@+id/tvHoraInicio" />
+
+    <TextView
+        android:id="@+id/tvIdEmpleadoInicio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        app:layout_constraintEnd_toEndOf="@+id/tvHEmpleado"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/tvHEmpleado"
+        app:layout_constraintTop_toBottomOf="@+id/view" />
+
+    <TextView
+        android:id="@+id/tvIdEmpleadoCierre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        app:layout_constraintEnd_toEndOf="@+id/tvIdEmpleadoInicio"
+        app:layout_constraintStart_toStartOf="@+id/tvIdEmpleadoInicio"
+        app:layout_constraintTop_toBottomOf="@+id/tvIdEmpleadoInicio" />
+
+    <TextView
+        android:id="@+id/tvHistoryTotalPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.00"
+        app:layout_constraintEnd_toEndOf="@+id/tvHTotal"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/tvHTotal"
+        app:layout_constraintTop_toBottomOf="@+id/view" />
+
+    <TextView
+        android:id="@+id/tvHMesa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Id\nMesa"
+        app:layout_constraintEnd_toStartOf="@+id/tvHHora"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvIdFactura" />
+
+    <TextView
+        android:id="@+id/tvHHora"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Hora inicio\nHora cierre"
+        app:layout_constraintEnd_toStartOf="@+id/tvHEmpleado"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvHMesa"
+        app:layout_constraintTop_toBottomOf="@+id/tvIdFactura" />
+
+    <TextView
+        android:id="@+id/tvHEmpleado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Emp. inicio\nEmp. cierre"
+        app:layout_constraintEnd_toStartOf="@+id/tvHTotal"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvHHora"
+        app:layout_constraintTop_toBottomOf="@+id/tvIdFactura" />
+
+    <TextView
+        android:id="@+id/tvHTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Total"
+        app:layout_constraintBottom_toTopOf="@+id/barrier3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvHEmpleado"
+        app:layout_constraintTop_toBottomOf="@+id/tvIdFactura" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="left"
+        app:constraint_referenced_ids="tvHoraInicio,tvHoraCierre,tvHHora"
+        tools:layout_editor_absoluteX="403dp" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="right"
+        app:constraint_referenced_ids="tvHoraInicio,tvHoraCierre,tvHHora"
+        tools:layout_editor_absoluteX="403dp" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="tvHTotal,tvHEmpleado,tvHMesa,tvHHora"
+        tools:layout_editor_absoluteY="112dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>

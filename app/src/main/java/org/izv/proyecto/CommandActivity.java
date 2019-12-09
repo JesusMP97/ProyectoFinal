@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.TypedArray;
-import android.opengl.Visibility;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -42,8 +41,8 @@ import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.adapter.CommandViewAdapter;
 import org.izv.proyecto.view.adapter.ProductViewAdapter;
 import org.izv.proyecto.view.delay.AfterDelay;
-import org.izv.proyecto.view.model.CommandViewModel;
 import org.izv.proyecto.view.crud.BeforeCrud;
+import org.izv.proyecto.view.model.CommandViewModel;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
@@ -58,18 +57,20 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandActivity extends AppCompatActivity {
+    private static final String FILE_LOGIN = "login";
+    private static final String KEY_LOGIN_ID = "id";
     private static final int ASC = 1;
     private static final long COMMAND_UNDELIVERABLE = 0;
     private static final int DESC = -1;
     private static final String KEY_PRICE = "price";
     private static final String KEY_SEARCH = "search";
-    public static final int OCCUPIED_TABLE = 0;
+    private static final int OCCUPIED_TABLE = 0;
     private static final String FILE_INVOICE = "invoice";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
     private static final String KEY_COMMANDS = "commands";
-    private static final float KEY_DEFAULT_PRICE = 0;
-    private static final String KEY_DEFAULT_VALUE = "0";
+    private static final float DEFAULT_PRICE = 0;
+    private static final String DEFAULT_VALUE = "0";
     private static final String KEY_FILTER = "filter";
     private static final String KEY_INVOICE = "invoice";
     private static final String KEY_INVOICE_ID = "invoiceId";
@@ -78,7 +79,7 @@ public class CommandActivity extends AppCompatActivity {
     private static final long MIN_AMOUNT = 1;
     private static final long POST_CLOSE_SEARCH_VIEW = 300;
     private static final String PRICE_FORMAT = "%.2f";
-    private SubActionButton btLogOut, btProfile, btSettings;
+    private SubActionButton btLogOut, btSettings;
     private HashMap<String, List<String>> categoriesMap;
     private ConstraintLayout clContainter;
     private CommandViewAdapter commandAdapter;
@@ -180,7 +181,7 @@ public class CommandActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        String url = IO.readPreferences(this, Settings.FILE_SETTINGS, Settings.KEY_URL, KEY_DEFAULT_VALUE);
+        String url = IO.readPreferences(this, Settings.FILE_SETTINGS, Settings.KEY_URL, DEFAULT_VALUE);
         if (!this.url.equalsIgnoreCase(url)) {
             viewModel.commandViewModel.setUrl(url);
             viewModel.invoiceViewModel.setUrl(url);
@@ -189,8 +190,8 @@ public class CommandActivity extends AppCompatActivity {
         }
     }
 
-    public CommandActivity addCommands(Producto product) {
-        long idEmp = Long.parseLong(IO.readPreferences(CommandActivity.this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, "0"));
+    private CommandActivity addCommands(Producto product) {
+        long idEmp = Long.parseLong(IO.readPreferences(CommandActivity.this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
         Contenedor.CommandDetail commandDetail = new Contenedor.CommandDetail();
         commandDetail.setProduct(product);
         Comanda command = new Comanda();
@@ -223,7 +224,7 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    public CommandActivity createInvoice() {
+    private CommandActivity createInvoice() {
         Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
         if (getInvoice != null) {
             assignInvoice(getInvoice);
@@ -241,7 +242,7 @@ public class CommandActivity extends AppCompatActivity {
     }
 
     private CommandActivity addInvoice() {
-        long idEmp = Long.parseLong(IO.readPreferences(this, Login.FILE_LOGIN, Login.KEY_LOGIN_ID, KEY_DEFAULT_VALUE));
+        long idEmp = Long.parseLong(IO.readPreferences(this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
         Mesa table = getIntent().getParcelableExtra(KEY_TABLE);
         invoice = new Factura()
                 .setIdempleadoinicio(idEmp)
@@ -249,7 +250,7 @@ public class CommandActivity extends AppCompatActivity {
                 .setHorainicio(Time.getCurrentTime())
                 .setHoracierre(Time.getCurrentTime())
                 .setIdmesa(table.getId());
-        float total = KEY_DEFAULT_PRICE;
+        float total = DEFAULT_PRICE;
         invoice.setTotal(total);
         viewModel.invoiceViewModel.add(invoice);
         return this;
@@ -558,7 +559,7 @@ public class CommandActivity extends AppCompatActivity {
     }
 
     public float getTotalPriceOfCommands() {
-        float total = KEY_DEFAULT_PRICE;
+        float total = DEFAULT_PRICE;
         for (Contenedor.CommandDetail com : commandAdapter.getCommands()) {
             total += com.getCommand().getUnidades() * com.getProduct().getPrecio();
         }
@@ -589,8 +590,6 @@ public class CommandActivity extends AppCompatActivity {
         ivFab.setImageDrawable(getDrawable(R.drawable.ic_done_black_36dp));
         ImageView ivLogOut = new ImageView(this);
         ivLogOut.setImageDrawable(getDrawable(R.drawable.ic_exit_to_app_black_24dp));
-        ImageView ivProfile = new ImageView(this);
-        ivProfile.setImageDrawable(getDrawable(R.drawable.ic_profile_black_24dp));
         ImageView ivSettings = new ImageView(this);
         ivSettings.setImageDrawable(getDrawable(R.drawable.ic_settings_black_24dp));
         fab = new FloatingActionButton.Builder(this)
@@ -598,11 +597,9 @@ public class CommandActivity extends AppCompatActivity {
                 .build();
         SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
         btLogOut = itemBuilder.setContentView(ivLogOut).build();
-        btProfile = itemBuilder.setContentView(ivProfile).build();
         btSettings = itemBuilder.setContentView(ivSettings).build();
         new FloatingActionMenu.Builder(this)
                 .addSubActionView(btLogOut)
-                .addSubActionView(btProfile)
                 .addSubActionView(btSettings)
                 .attachTo(fab)
                 .build();
@@ -611,7 +608,7 @@ public class CommandActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     public CommandActivity setCommandTotalValue() {
-        tvCommandTotal.setText(getString(R.string.total) + " " + getTotalPriceOfCommands() + getString(R.string.euro));
+        tvCommandTotal.setText(getString(R.string.total) + " " + String.format(Locale.GERMAN, PRICE_FORMAT, getTotalPriceOfCommands()) + getString(R.string.euro));
         return this;
     }
 
@@ -682,7 +679,7 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    public class Delay extends Thread {
+    private class Delay extends Thread {
         private volatile AfterDelay afterDelay;
         private volatile long delay;
 

@@ -6,18 +6,8 @@ import android.os.Parcelable;
 import java.io.Serializable;
 
 public class Mesa implements Parcelable {
-    public static final Creator<Mesa> CREATOR = new Creator<Mesa>() {
-        @Override
-        public Mesa createFromParcel(Parcel in) {
-            return new Mesa(in);
-        }
 
-        @Override
-        public Mesa[] newArray(int size) {
-            return new Mesa[size];
-        }
-    };
-    private long id, numero, estado, capacidad;
+    private long id, numero, estado, capacidad, mesaprincipal, mesasecundaria;
     private String zona;
 
     public Mesa() {
@@ -29,7 +19,34 @@ public class Mesa implements Parcelable {
         numero = in.readLong();
         estado = in.readLong();
         capacidad = in.readLong();
+        mesaprincipal = in.readLong();
+        mesasecundaria = in.readLong();
         zona = in.readString();
+    }
+
+    public static final Creator<Mesa> CREATOR = new Creator<Mesa>() {
+        @Override
+        public Mesa createFromParcel(Parcel in) {
+            return new Mesa(in);
+        }
+
+        @Override
+        public Mesa[] newArray(int size) {
+            return new Mesa[size];
+        }
+    };
+
+    @Override
+    public String toString() {
+        return "Mesa{" +
+                "id=" + id +
+                ", numero=" + numero +
+                ", estado=" + estado +
+                ", capacidad=" + capacidad +
+                ", mesaprincipal=" + mesaprincipal +
+                ", mesasecundaria=" + mesasecundaria +
+                ", zona='" + zona + '\'' +
+                '}';
     }
 
     @Override
@@ -43,18 +60,27 @@ public class Mesa implements Parcelable {
         dest.writeLong(numero);
         dest.writeLong(estado);
         dest.writeLong(capacidad);
+        dest.writeLong(mesaprincipal);
+        dest.writeLong(mesasecundaria);
         dest.writeString(zona);
     }
 
-    @Override
-    public String toString() {
-        return "Mesa{" +
-                "id=" + id +
-                ", numero=" + numero +
-                ", estado=" + estado +
-                ", capacidad=" + capacidad +
-                ", zona='" + zona + '\'' +
-                '}';
+    public long getMesaprincipal() {
+        return mesaprincipal;
+    }
+
+    public Mesa setMesaprincipal(long mesaprincipal) {
+        this.mesaprincipal = mesaprincipal;
+        return this;
+    }
+
+    public long getMesasecundaria() {
+        return mesasecundaria;
+    }
+
+    public Mesa setMesasecundaria(long mesasecundaria) {
+        this.mesasecundaria = mesasecundaria;
+        return this;
     }
 
     public long getCapacidad() {
