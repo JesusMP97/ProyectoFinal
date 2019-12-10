@@ -81,29 +81,28 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
 
     private String getTableNumbers(Mesa table, List<Mesa> tables) {
         String tableNumbers = "  ";
-        if (table.getMesaprincipal() > 0) {
+        if (table.getMesaprincipal() > EMPTY) {
             if (table.getMesaprincipal() == table.getId()) {
-                tableNumbers += table.getNumero() + context.getString(R.string.coma) + " ";
+                tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
                 for (Mesa current : tables) {
                     if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
-                        tableNumbers += current.getNumero() + context.getString(R.string.coma) + " ";
+                        tableNumbers += current.getId() + context.getString(R.string.coma) + " ";
                     }
                 }
             }
         } else {
-            tableNumbers += table.getNumero() + context.getString(R.string.coma) + " ";
+            tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
         }
         return tableNumbers.substring(0, tableNumbers.length() - 2);
     }
 
-    private long getTotalClients(Mesa table, List<Mesa> tables){
+    private long getTotalClients(Mesa table, List<Mesa> tables) {
         long total = EMPTY;
         if (table.getMesaprincipal() > EMPTY) {
             if (table.getMesaprincipal() == table.getId()) {
-                total = table.getCapacidad();
                 for (Mesa current : tables) {
-                    if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
-                        total += table.getCapacidad();
+                    if (current.getMesaprincipal() == table.getMesaprincipal()) {
+                        total += current.getCapacidad();
                     }
                 }
             }

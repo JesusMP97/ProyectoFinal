@@ -1,6 +1,5 @@
 package org.izv.proyecto;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -11,9 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,7 +18,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -30,42 +26,33 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-
-import org.izv.circularfloatingbutton.FloatingActionButton;
-import org.izv.circularfloatingbutton.FloatingActionMenu;
-import org.izv.circularfloatingbutton.SubActionButton;
 import org.izv.proyecto.model.data.Empleado;
 import org.izv.proyecto.model.repository.Repository;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.model.LoginViewModel;
-import org.izv.proyecto.view.model.MainViewModel;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
+import org.izv.proyecto.view.utils.Settings;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
-public class Login extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
     private static final String FILE_LOGIN = "login";
     private static final String KEY_LOGIN_ID = "id";
     private static final long FIELD_VISIBILITY_DELAY = 100;
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
-    private static final String KEY_DEFAULT_VALUE = "0";
+    private static final String KEY_DEFAULT_VALUE = "informatica.ieszaidinvergeles.org:8043";
     private static final int KEY_LOGIN_INTENT = 0;
     private static final String KEY_URL = "url";
     private static final long POST_ANIM_ALPHA_DELAY = 1500;
     private static final String SAVED_PASSWORD = "savedPassword";
     private static final String SAVED_USER_NAME = "savedUserName";
     private Button btLogin;
-    private SubActionButton btSettings;
     private Empleado current = new Empleado();
     private int currentPasswordSize;
     private List<Empleado> employees;
-    private boolean loading = true;
     private TextInputEditText etUserName, etPassword;
-    private FloatingActionButton fab;
     private TextInputLayout ilUserName, ilPassword;
     private Animation initApp;
     private TextView tvUserName, tvPassword, tvLogin;
@@ -82,7 +69,7 @@ public class Login extends AppCompatActivity {
         super.onStop();
     }
 
-    private Login initLoadingAlertDialogComponents() {
+    private LoginActivity initLoadingAlertDialogComponents() {
         AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.charging, null);
@@ -102,7 +89,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login afterSplash() {
+    private LoginActivity afterSplash() {
         if (!this.isDestroyed()) {
             loadingDialog.cancel();
             initAnimations()
@@ -156,7 +143,7 @@ public class Login extends AppCompatActivity {
     }
 
 
-    private Login adjustUserNameValues(CharSequence s) {
+    private LoginActivity adjustUserNameValues(CharSequence s) {
         if (etPassword.hasFocus() && s.length() == 0) {
             tvUserName.setVisibility(View.INVISIBLE);
             etUserName.setHint(getString(R.string.ilUserName));
@@ -164,7 +151,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login assignEvents() {
+    private LoginActivity assignEvents() {
         viewModel.getAll().observe(this, new Observer<List<Empleado>>() {
             @Override
             public void onChanged(List<Empleado> empleados) {
@@ -233,7 +220,7 @@ public class Login extends AppCompatActivity {
         btLogin.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Intent intent = new Intent(Login.this, SettingsActivity.class);
+                Intent intent = new Intent(LoginActivity.this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
             }
@@ -241,12 +228,12 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login showConexionError() {
+    private LoginActivity showConexionError() {
         Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         return this;
     }
 
-    private Login findAdecuateError(TextInputEditText et, TextInputLayout il, String userError, String passwordError) {
+    private LoginActivity findAdecuateError(TextInputEditText et, TextInputLayout il, String userError, String passwordError) {
         switch (et.getId()) {
             case R.id.etUserName:
                 il.setError(userError);
@@ -258,7 +245,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login findAdecuateHint(TextInputEditText currentEt, String userHint, String passwordHint) {
+    private LoginActivity findAdecuateHint(TextInputEditText currentEt, String userHint, String passwordHint) {
         switch (currentEt.getId()) {
             case R.id.etUserName:
                 currentEt.setHint(userHint);
@@ -283,13 +270,7 @@ public class Login extends AppCompatActivity {
         return value;
     }
 
-    private Login hideKeyboard(TextInputEditText current) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(current.getWindowToken(), 0);
-        return this;
-    }
-
-    private Login initAnimations() {
+    private LoginActivity initAnimations() {
         btLogin.startAnimation(initApp);
         ilUserName.startAnimation(initApp);
         ilPassword.startAnimation(initApp);
@@ -299,7 +280,8 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login initComponents() {
+    private LoginActivity initComponents() {
+        url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
         tvUserName = findViewById(R.id.tvUserName);
         etUserName = findViewById(R.id.etUserName);
         ilUserName = findViewById(R.id.ilUserName);
@@ -310,12 +292,11 @@ public class Login extends AppCompatActivity {
         tvLogin = findViewById(R.id.tvLogin);
         viewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         initApp = AnimationUtils.loadAnimation(this, R.anim.anim_alpha);
-        url = IO.readPreferences(this, FILE_SETTINGS, KEY_URL, KEY_DEFAULT_VALUE);
-        Log.v("xyz", "asdsad" + url);
+        Log.v("xyz", url + "caca");
         return this;
     }
 
-    private Login manageCredentials() {
+    private LoginActivity manageCredentials() {
         if (hasIp()) {
             if (hasConexion()) {
                 if (hasCredentials()) {
@@ -340,6 +321,7 @@ public class Login extends AppCompatActivity {
     private boolean hasIp() {
         boolean ip = false;
         if (!url.isEmpty()) {
+            Log.v("xyz", url);
             ip = true;
         }
         return ip;
@@ -353,7 +335,7 @@ public class Login extends AppCompatActivity {
         return conexion;
     }
 
-    private Login manageFocus(final TextInputEditText currentEt, final TextView currentTv, boolean hasFocus) {
+    private LoginActivity manageFocus(final TextInputEditText currentEt, final TextView currentTv, boolean hasFocus) {
         if (hasFocus) {
             setFocusedValues(currentEt, currentTv);
         } else {
@@ -362,7 +344,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login managePasswordSize(CharSequence s) {
+    private LoginActivity managePasswordSize(CharSequence s) {
         if (s.length() >= ilPassword.getCounterMaxLength()) {
             String password = "";
             int maxPasswordSize = s.length() - 1;
@@ -378,7 +360,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login postShowComponentsDelay() {
+    private LoginActivity postShowComponentsDelay() {
         if (!etUserName.hasFocus()) {
             etUserName.setHint(getString(R.string.ilUserName));
         }
@@ -388,7 +370,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login preShowComponentsDelay() {
+    private LoginActivity preShowComponentsDelay() {
         manageFocus(etUserName, tvUserName, etUserName.hasFocus());
         manageFocus(etPassword, tvPassword, etPassword.hasFocus());
         setEmptyHint(etUserName)
@@ -396,20 +378,20 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login quitError(TextInputLayout il, CharSequence s) {
+    private LoginActivity quitError(TextInputLayout il, CharSequence s) {
         if (s.length() >= 0)
             il.setError(null);
         return this;
     }
 
-    private Login setEmptyHint(EditText currentEt) {
+    private LoginActivity setEmptyHint(EditText currentEt) {
         if (currentEt.getText().toString().isEmpty() && !currentEt.hasFocus()) {
             currentEt.setHint("");
         }
         return this;
     }
 
-    private Login setErrorValues(TextInputEditText et, TextInputLayout il, TextView tv, String credential) {
+    private LoginActivity setErrorValues(TextInputEditText et, TextInputLayout il, TextView tv, String credential) {
         if (et.getText().toString().isEmpty()) {
             findAdecuateError(et, il, getString(R.string.etEmptyUserNameError), getString(R.string.etEmptyPasswordError));
         }
@@ -422,7 +404,7 @@ public class Login extends AppCompatActivity {
     }
 
 
-    private Login setFocusedValues(final TextInputEditText currentEt, final TextView currentTv) {
+    private LoginActivity setFocusedValues(final TextInputEditText currentEt, final TextView currentTv) {
         currentEt.setBackground(getDrawable(R.drawable.et_focused_background));
         currentTv.setTextColor(ContextCompat.getColor(this, R.color.white));
         AfterDelay afterDelay = new AfterDelay() {
@@ -442,7 +424,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login setSavedInstanceValues(Bundle savedInstanceState) {
+    private LoginActivity setSavedInstanceValues(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             String savedUserName = savedInstanceState.getString(SAVED_USER_NAME);
             String savedPassword = savedInstanceState.getString(SAVED_PASSWORD);
@@ -452,7 +434,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login setUnfocusedValues(TextInputEditText currentEt, TextView currentTv) {
+    private LoginActivity setUnfocusedValues(TextInputEditText currentEt, TextView currentTv) {
         currentEt.setBackground(getDrawable(R.drawable.et_background));
         if (!currentEt.getText().toString().isEmpty()) {
             currentEt.setHint("");
@@ -466,7 +448,7 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    public Login showComponents() {
+    public LoginActivity showComponents() {
         preShowComponentsDelay();
         AfterDelay afterDelay = new AfterDelay() {
             @Override
@@ -484,8 +466,8 @@ public class Login extends AppCompatActivity {
         return this;
     }
 
-    private Login startActivity() {
-        startActivityForResult(new Intent(Login.this, MainActivity.class), KEY_LOGIN_INTENT);
+    private LoginActivity startActivity() {
+        startActivityForResult(new Intent(LoginActivity.this, MainActivity.class), KEY_LOGIN_INTENT);
         return this;
     }
 

@@ -22,7 +22,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.print.PrintManager;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -58,7 +57,6 @@ import org.izv.proyecto.view.utils.Tools;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -71,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int DOUBLE_TABLE = 2;
     private static final int FIRST_ELEMENT = 0;
     private static final long EMPTY = 0;
-    private static final String FILE_INVOICE = "invoice";
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final int FREE_TABLE = 1;
     private static final long HORIZONTAL_TABLE_ID = 7;
@@ -79,8 +76,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_DEFAULT_VALUE = "0";
     private static final String KEY_HISTORY = "history";
     private static final String KEY_INVOICE = "invoice";
-    private static final String KEY_INVOICES_FILTERED = "invoicesFiltered";
-    private static final String KEY_INVOICE_ID = "invoiceId";
     private static final int KEY_MAIN_INTENT = 1;
     private static final String KEY_TABLE = "table";
     private static final String KEY_URL = "url";
@@ -93,16 +88,14 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_MAP_DIALOG = "showed";
     private static final String KEY_SEARCH = "search";
     private static final int SINGLE_TABLE = 1;
-    private static final String TAG = "xyz";
     private static final String INTENT_TYPE = "application/pdf";
     private ActionMode actionMode;
     private MainViewAdapter adapter;
-    private boolean loading = true, commandsArrived, productsArrived;
+    private boolean commandsArrived, productsArrived;
     private AlertDialog mapDialog, loadingDialog;
     private SubActionButton btLogOut, btHistory, btSettings;
     private Mesa current;
     private FloatingActionButton fab;
-    private Factura invoice;
     private ImageView ivDoubleTable1, ivDoubleTable2, ivDoubleTable3, ivDoubleTable4, ivDoubleTable5, ivDoubleTable6, ivDoubleTable7, ivDoubleTable8, ivQuadrupleTable1, ivQuadrupleTable2, ivQuadrupleTable3, ivQuadrupleTable4, ivOctaTable1, ivOctaTable2, ivOctaTable3, ivBar1, ivBar2, ivBar3, ivBar4, ivBar5;
     private RecyclerView rvList;
     private SearchView svSearch;
@@ -546,7 +539,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 //                setResult(Activity.RESULT_OK, new Intent());
                 finish();
-                Intent intent = new Intent(MainActivity.this, Login.class);
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(intent);
             }
         });
@@ -593,7 +586,7 @@ public class MainActivity extends AppCompatActivity {
         if (isFree(tableId)) {
             startActivityFromResult(null);
 //                    .startActivity();
-            Toast.makeText(this, getString(R.string.table) + " " + current.getNumero() + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.table) + " " + current.getId() + " " + getString(R.string.tableAdded), Toast.LENGTH_SHORT).show();
         } else {
             for (Mesa table : tableList) {
                 if (table.getId() == tableId) {

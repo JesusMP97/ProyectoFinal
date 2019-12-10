@@ -16,11 +16,8 @@ import org.izv.circularfloatingbutton.FloatingActionMenu;
 import org.izv.circularfloatingbutton.SubActionButton;
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Contenedor;
-import org.izv.proyecto.view.adapter.CommandViewAdapter;
-import org.izv.proyecto.view.adapter.MainViewAdapter;
 import org.izv.proyecto.view.adapter.SeeCommandAdapter;
 import org.izv.proyecto.view.model.CommandViewModel;
-import org.izv.proyecto.view.model.MainViewModel;
 
 import java.util.List;
 

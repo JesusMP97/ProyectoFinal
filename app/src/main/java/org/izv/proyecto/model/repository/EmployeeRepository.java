@@ -28,6 +28,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
     private Retrofit retrofit;
 
     public EmployeeRepository(String url) {
+        Log.v("xyz", url + "ads");
         retrieveApiClient(url);
         fetchAll();
     }
@@ -134,7 +135,7 @@ public class EmployeeRepository implements Repository.Data<Empleado> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.v("abc",  t.getMessage());
+                Log.v("abc", t.getMessage());
                 if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }

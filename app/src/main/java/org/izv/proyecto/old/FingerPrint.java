@@ -23,7 +23,7 @@ public class FingerPrint extends AppCompatActivity {
 //        }
 //        keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-//    private Login checkFingerPrintRequirements() {
+//    private LoginActivity checkFingerPrintRequirements() {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //            fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
 //            keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
@@ -54,7 +54,7 @@ public class FingerPrint extends AppCompatActivity {
 //    }
 //
 //    @TargetApi(Build.VERSION_CODES.M)
-//    private Login generateKey() {
+//    private LoginActivity generateKey() {
 //        try {
 //            keyStore = KeyStore.getInstance("AndroidKeyStore");
 //            KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");

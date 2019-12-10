@@ -62,18 +62,14 @@ public class CommandActivity extends AppCompatActivity {
     private static final int ASC = 1;
     private static final long COMMAND_UNDELIVERABLE = 0;
     private static final int DESC = -1;
-    private static final String KEY_PRICE = "price";
     private static final String KEY_SEARCH = "search";
     private static final int OCCUPIED_TABLE = 0;
-    private static final String FILE_INVOICE = "invoice";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
     private static final String KEY_COMMANDS = "commands";
     private static final float DEFAULT_PRICE = 0;
     private static final String DEFAULT_VALUE = "0";
-    private static final String KEY_FILTER = "filter";
     private static final String KEY_INVOICE = "invoice";
-    private static final String KEY_INVOICE_ID = "invoiceId";
     private static final String KEY_PRODUCTS = "products";
     private static final String KEY_TABLE = "table";
     private static final long MIN_AMOUNT = 1;
@@ -92,7 +88,6 @@ public class CommandActivity extends AppCompatActivity {
     private SearchView svSearch;
     private Toolbar tb;
     private TextView tvCommandTotal;
-    private String url;
     private CommandViewModel viewModel;
     private Contenedor.CommandDetail removed;
     private ImageView ivLoading;
@@ -103,7 +98,7 @@ public class CommandActivity extends AppCompatActivity {
     private Factura invoice;
     private boolean enabled = false;
     private Bundle savedInstanceState;
-    private String search;
+    private String search,url;
     private float totalPrice;
     private com.google.android.material.floatingactionbutton.FloatingActionButton fabf;
 

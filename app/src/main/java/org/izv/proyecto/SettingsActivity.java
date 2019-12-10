@@ -1,15 +1,7 @@
 package org.izv.proyecto;
-
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
-
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.NavUtils;
 import androidx.preference.PreferenceFragmentCompat;
 
 public class SettingsActivity extends AppCompatActivity {

@@ -3,11 +3,10 @@ package org.izv.proyecto.model.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.Serializable;
 
 public class Mesa implements Parcelable {
 
-    private long id, numero, estado, capacidad, mesaprincipal, mesasecundaria;
+    private long id, estado, capacidad, mesaprincipal;
     private String zona;
 
     public Mesa() {
@@ -16,11 +15,9 @@ public class Mesa implements Parcelable {
 
     protected Mesa(Parcel in) {
         id = in.readLong();
-        numero = in.readLong();
         estado = in.readLong();
         capacidad = in.readLong();
         mesaprincipal = in.readLong();
-        mesasecundaria = in.readLong();
         zona = in.readString();
     }
 
@@ -40,11 +37,9 @@ public class Mesa implements Parcelable {
     public String toString() {
         return "Mesa{" +
                 "id=" + id +
-                ", numero=" + numero +
                 ", estado=" + estado +
                 ", capacidad=" + capacidad +
                 ", mesaprincipal=" + mesaprincipal +
-                ", mesasecundaria=" + mesasecundaria +
                 ", zona='" + zona + '\'' +
                 '}';
     }
@@ -57,11 +52,9 @@ public class Mesa implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
-        dest.writeLong(numero);
         dest.writeLong(estado);
         dest.writeLong(capacidad);
         dest.writeLong(mesaprincipal);
-        dest.writeLong(mesasecundaria);
         dest.writeString(zona);
     }
 
@@ -71,15 +64,6 @@ public class Mesa implements Parcelable {
 
     public Mesa setMesaprincipal(long mesaprincipal) {
         this.mesaprincipal = mesaprincipal;
-        return this;
-    }
-
-    public long getMesasecundaria() {
-        return mesasecundaria;
-    }
-
-    public Mesa setMesasecundaria(long mesasecundaria) {
-        this.mesasecundaria = mesasecundaria;
         return this;
     }
 
@@ -107,15 +91,6 @@ public class Mesa implements Parcelable {
 
     public Mesa setId(long id) {
         this.id = id;
-        return this;
-    }
-
-    public long getNumero() {
-        return numero;
-    }
-
-    public Mesa setNumero(long numero) {
-        this.numero = numero;
         return this;
     }
 

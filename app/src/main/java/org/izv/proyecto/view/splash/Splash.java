@@ -1,14 +1,10 @@
 package org.izv.proyecto.view.splash;
 
-import android.app.Activity;
 import android.content.res.TypedArray;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AlertDialog;
-
-import org.izv.proyecto.Login;
 
 public class Splash extends AsyncTask<Void, Integer, Integer> {
     private int cont = 0;
