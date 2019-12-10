@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.print.PrintManager;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private static final long EMPTY = 0;
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final int FREE_TABLE = 1;
-    private static final long HORIZONTAL_TABLE_ID = 7;
+    private static final long HORIZONTAL_TABLE_ID = 12;
     private static final String KEY_ACTION_MODE = "actionmode";
     private static final String KEY_DEFAULT_VALUE = "0";
     private static final String KEY_HISTORY = "history";
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private String url, search;
     private MainViewModel viewModel;
     private List<Mesa> tableList;
-    private List<Factura> invoiceList;
+    private List<Factura> invoicesFiltered;
     private Bundle savedInstanceState;
     private ImageView ivLoading;
     private Splash splash;
@@ -234,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MainActivity sortInvoicesByPrice(final int critery) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            invoiceList.sort(new Comparator<Factura>() {
+            invoicesFiltered.sort(new Comparator<Factura>() {
                 @Override
                 public int compare(Factura f1, Factura f2) {
                     return Float.compare(f1.getTotal(), f2.getTotal()) * critery;
@@ -246,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MainActivity sortInvoicesByTime(final int critery) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            invoiceList.sort(new Comparator<Factura>() {
+            invoicesFiltered.sort(new Comparator<Factura>() {
                 @Override
                 public int compare(Factura f1, Factura f2) {
                     return f1.getHorainicio().compareTo(f2.getHorainicio()) * critery;
@@ -261,12 +262,12 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.subItPrice:
                 sortInvoicesByPrice(ASC);
-                adapter.setData(invoiceList);
+                adapter.setData(invoicesFiltered);
                 break;
 
             case R.id.subItPriceDes:
                 sortInvoicesByPrice(DESC);
-                adapter.setData(invoiceList);
+                adapter.setData(invoicesFiltered);
                 break;
 
             case R.id.subItTime:
@@ -276,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.subItTimeDes:
                 sortInvoicesByTime(DESC);
-                adapter.setData(invoiceList);
+                adapter.setData(invoicesFiltered);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -360,22 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 }, null);
                 break;
             case R.id.itPayment:
-                createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
-                    @Override
-                    public void doIt() {
-                        print()
-                                .deleteCommands()
-                                .updateTableState()
-                                .finishInvoice();
-                    }
-                }, new BeforePayment() {
-                    @Override
-                    public void doIt() {
-                        deleteCommands()
-                                .updateTableState()
-                                .finishInvoice();
-                    }
-                });
+                pay();
                 break;
         }
         return super.onContextItemSelected(item);
@@ -389,8 +375,30 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity pay() {
+        createDialog(getString(R.string.payConfirm), getString(R.string.payConfirmTitle), new BeforePayment() {
+            @Override
+            public void doIt() {
+                createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        print();
+                    }
+                }, new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        deleteCommands()
+                                .updateTableState()
+                                .finishInvoice();
+                    }
+                });
+            }
+        }, null);
+        return this;
+    }
+
     private MainActivity updateTableState() {
-        Mesa mainTable = new Mesa();
+        Mesa mainTable = null;
         for (Mesa table : tableList) {
             if (table.getId() == currentInvoice.getIdmesa()) {
                 if (table.getMesaprincipal() == table.getId()) {
@@ -401,11 +409,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        for (Mesa table : tableList) {
-            if (table.getMesaprincipal() == mainTable.getId()) {
-                table.setEstado(FREE_TABLE);
-                table.setMesaprincipal(MAIN_DEFAULT_VALUE);
-                viewModel.tableViewModel.update(table);
+        if (mainTable != null) {
+            for (Mesa table : tableList) {
+                if (table.getMesaprincipal() == mainTable.getId()) {
+                    Log.v("cba", table.toString());
+                    table.setEstado(FREE_TABLE);
+                    table.setMesaprincipal(MAIN_DEFAULT_VALUE);
+                    viewModel.tableViewModel.update(table);
+                }
             }
         }
         return this;
@@ -435,17 +446,23 @@ public class MainActivity extends AppCompatActivity {
     private MainActivity createDialog(String message, String
             title, final BeforePayment beforePayment, final BeforePayment pay) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
         builder.setTitle(title);
         builder.setMessage(message);
         builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
+                if (pay != null) {
+                    pay.doIt();
+                }
                 beforePayment.doIt();
                 dialog.cancel();
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                pay.doIt();
+                if (pay != null) {
+                    pay.doIt();
+                }
                 dialog.cancel();
             }
         });
@@ -498,13 +515,12 @@ public class MainActivity extends AppCompatActivity {
         viewModel.invoiceViewModel.getAll().observe(this, new Observer<List<Factura>>() {
             @Override
             public void onChanged(List<Factura> facturas) {
-                List<Factura> filtered = getFilteredInvoices(facturas);
-                invoiceList = filtered;
+                invoicesFiltered = getFilteredInvoices(facturas);
                 if (savedInstanceState != null && savedInstanceState.getParcelableArrayList(KEY_ACTION_MODE) == null) {
-                    adapter.setData(filtered);
+                    adapter.setData(invoicesFiltered);
                 }
                 if (savedInstanceState == null) {
-                    adapter.setData(filtered);
+                    adapter.setData(invoicesFiltered);
                 }
                 splash.setLoading(false);
             }
@@ -810,11 +826,11 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    private List<Factura> filterFacturas(String date) {
+    private List<Factura> filterInvoices(String date) {
         List<Factura> filtered = new ArrayList<>();
-        for (int i = 0; i < invoiceList.size(); i++) {
-            if (invoiceList.get(i).getHorainicio().contains(date)) {
-                filtered.add(invoiceList.get(i));
+        for (int i = 0; i < invoicesFiltered.size(); i++) {
+            if (invoicesFiltered.get(i).getHorainicio().contains(date)) {
+                filtered.add(invoicesFiltered.get(i));
             }
         }
         return filtered;
@@ -823,7 +839,7 @@ public class MainActivity extends AppCompatActivity {
     private void sendToHistory(String date) {
         Intent intent = new Intent(this, HistoryActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(KEY_HISTORY, (ArrayList<? extends Parcelable>) filterFacturas(date));
+        bundle.putParcelableArrayList(KEY_HISTORY, (ArrayList<? extends Parcelable>) filterInvoices(date));
         intent.putExtras(bundle);
         startActivity(intent);
     }

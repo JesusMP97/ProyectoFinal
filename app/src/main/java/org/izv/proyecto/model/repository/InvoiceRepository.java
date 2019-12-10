@@ -26,10 +26,20 @@ public class InvoiceRepository implements Repository.Data<Factura> {
     private Retrofit retrofit;
     private Repository.OnFailureListener onFailureListener;
     private MutableLiveData<Long> invoiceId = new MutableLiveData<>();
+    private MutableLiveData<Long> updatedInvoiceId = new MutableLiveData<>();
 
     public InvoiceRepository(String url) {
         retrieveApiClient(url);
         fetchAll();
+    }
+
+    public MutableLiveData<Long> getUpdatedInvoiceId() {
+        return updatedInvoiceId;
+    }
+
+    public InvoiceRepository setUpdatedInvoiceId(MutableLiveData<Long> updatedInvoiceId) {
+        this.updatedInvoiceId = updatedInvoiceId;
+        return this;
     }
 
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
@@ -130,6 +140,7 @@ public class InvoiceRepository implements Repository.Data<Factura> {
             public void onResponse(Call<Long> call, Response<Long> response) {
                 if (response.body() != null) {
                     long result = response.body();
+                    updatedInvoiceId.setValue(response.body());
                     Log.v(TAG, String.valueOf(result));
                     if (result > EMPTY) {
                         fetchAll();

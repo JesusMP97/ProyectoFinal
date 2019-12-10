@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Factura;
@@ -27,11 +28,16 @@ public class CommandViewModel extends AndroidViewModel {
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
         productRepository.setOnFailureListener(onFailureListener);
     }
-
+    public LiveData<Long> getUpdatedTableId() {
+        return tableRepository.getUpdatedTableId();
+    }
     public LiveData<Long> getInvoiceId() {
         return invoiceRepository.getInvoiceId();
     }
 
+    public LiveData<Long> getUpdatedInvoiceId() {
+        return invoiceRepository.getUpdatedInvoiceId();
+    }
 
     public ViewModel<Producto> productoViewModel = new ViewModel<Producto>() {
         @Override

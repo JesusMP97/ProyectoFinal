@@ -24,13 +24,23 @@ public class TableRepository implements Repository.Data<Mesa> {
     private TableClient client;
     private Retrofit retrofit;
     private Repository.OnFailureListener onFailureListener;
+    private MutableLiveData<Long> updatedTableId = new MutableLiveData<>();
+
+
+    public MutableLiveData<Long> getUpdatedTableId() {
+        return updatedTableId;
+    }
+
+
     public TableRepository(String url) {
         retrieveApiClient(url);
         fetchAll();
     }
+
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
         this.onFailureListener = onFailureListener;
     }
+
     private void retrieveApiClient(String url) {
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://" + url + "/ProyectoFinal/public/api/")
@@ -38,9 +48,11 @@ public class TableRepository implements Repository.Data<Mesa> {
                 .build();
         client = retrofit.create(TableClient.class);
     }
+
     public void setUrl(String url) {
         retrieveApiClient(url);
     }
+
     @Override
     public void add(Mesa object) {
         Call<Long> call = client.post(object);
@@ -56,7 +68,7 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }
@@ -78,7 +90,7 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }
@@ -114,9 +126,10 @@ public class TableRepository implements Repository.Data<Mesa> {
         call.enqueue(new Callback<Long>() {
             @Override
             public void onResponse(Call<Long> call, Response<Long> response) {
-                if(response.body() != null){
+                if (response.body() != null) {
                     long result = response.body();
                     Log.v(TAG, String.valueOf(result));
+                    updatedTableId.setValue(response.body());
                     if (result > EMPTY) {
                         fetchAll();
                     }
@@ -125,7 +138,7 @@ public class TableRepository implements Repository.Data<Mesa> {
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                if(t instanceof SocketTimeoutException){
+                if (t instanceof SocketTimeoutException) {
                     onFailureListener.onConnectionFailure();
                 }
             }

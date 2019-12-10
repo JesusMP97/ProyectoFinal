@@ -113,5 +113,7 @@
     <string name="_9">9</string>
     <string name="_10">10</string>
     <string name="_11">11</string>
+    <string name="payConfirm">Estás seguro que quieres realizar el pago?</string>
+    <string name="payConfirmTitle">Pago</string>
 
 </resources>

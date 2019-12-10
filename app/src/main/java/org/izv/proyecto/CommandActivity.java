@@ -43,6 +43,7 @@ import org.izv.proyecto.view.adapter.ProductViewAdapter;
 import org.izv.proyecto.view.delay.AfterDelay;
 import org.izv.proyecto.view.crud.BeforeCrud;
 import org.izv.proyecto.view.model.CommandViewModel;
+import org.izv.proyecto.view.splash.EndSplash;
 import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 import org.izv.proyecto.view.utils.IO;
@@ -57,6 +58,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandActivity extends AppCompatActivity {
+    private static final long DEFAULT_UNITS = 1;
+    private static final long EMTY = 0;
     private static final String FILE_LOGIN = "login";
     private static final String KEY_LOGIN_ID = "id";
     private static final int ASC = 1;
@@ -96,10 +99,11 @@ public class CommandActivity extends AppCompatActivity {
     private AlertDialog loadingDialog;
     private Long idInvoice;
     private Factura invoice;
-    private boolean enabled = false;
+    private boolean enabled;
     private Bundle savedInstanceState;
-    private String search,url;
+    private String search, url;
     private float totalPrice;
+    private EndSplash endSplash;
     private com.google.android.material.floatingactionbutton.FloatingActionButton fabf;
 
     @Override
@@ -111,8 +115,8 @@ public class CommandActivity extends AppCompatActivity {
                 .initFabComponents()
                 .setSupportActionBarValues()
                 .assignEvents()
-                .initLoadingAlertDialogComponents().
-                createInvoice()
+                .initLoadingAlertDialogComponents()
+                .createInvoice()
                 .setSavedInstanceValues();
     }
 
@@ -190,7 +194,7 @@ public class CommandActivity extends AppCompatActivity {
         Contenedor.CommandDetail commandDetail = new Contenedor.CommandDetail();
         commandDetail.setProduct(product);
         Comanda command = new Comanda();
-        long units = 1;
+        long units = DEFAULT_UNITS;
         boolean duplicate = false;
         if (!commandAdapter.getCommands().isEmpty()) {
             for (Contenedor.CommandDetail cc : commandAdapter.getCommands()) {
@@ -254,6 +258,10 @@ public class CommandActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         splash.setLoading(false);
+        if (endSplash != null) {
+            endSplash.setLoading(false);
+            endSplash.setLoading2(false);
+        }
         super.onStop();
     }
 
@@ -283,6 +291,12 @@ public class CommandActivity extends AppCompatActivity {
             }
         });
         splash.execute();
+        return this;
+    }
+
+    private CommandActivity initEndSplash(OnSplash onSplash) {
+        endSplash = new EndSplash(onSplash);
+        endSplash.execute();
         return this;
     }
 
@@ -330,7 +344,6 @@ public class CommandActivity extends AppCompatActivity {
         if (getInvoice == null) {
             Mesa table = intent.getParcelableExtra(KEY_TABLE);
             table.setEstado(OCCUPIED_TABLE);
-            Log.v("coommand", table.toString());
             viewModel.tableViewModel.update(table);
         }
         return this;
@@ -355,6 +368,20 @@ public class CommandActivity extends AppCompatActivity {
             public void onChanged(Long aLong) {
                 idInvoice = aLong;
                 enabled = true;
+            }
+        });
+        viewModel.getUpdatedInvoiceId().observe(this, new Observer<Long>() {
+            @Override
+            public void onChanged(Long aLong) {
+                if (aLong > EMTY) {
+                    endSplash.setLoading(false);
+                }
+            }
+        });
+        viewModel.getUpdatedTableId().observe(this, new Observer<Long>() {
+            @Override
+            public void onChanged(Long aLong) {
+                endSplash.setLoading2(false);
             }
         });
         viewModel.productoViewModel.getAll().observe(this, new Observer<List<Producto>>() {
@@ -393,7 +420,13 @@ public class CommandActivity extends AppCompatActivity {
                     updateInvoice(total)
                             .updateTableState()
                             .addCommands(commandDetail)
-                            .endActivity();
+                            .initEndSplash(new OnSplash() {
+                                @Override
+                                public void onFinished() {
+                                    endActivity();
+                                }
+                            });
+                    splash.setLoading2(true);
 
                 } else {
                     Toast.makeText(CommandActivity.this, getString(R.string.unselectedProduct), Toast.LENGTH_SHORT).show();
