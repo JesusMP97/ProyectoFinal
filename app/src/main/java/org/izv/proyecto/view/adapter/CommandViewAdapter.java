@@ -16,16 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.izv.proyecto.R;
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Contenedor;
-import org.izv.proyecto.model.data.Factura;
 import org.izv.proyecto.model.data.Producto;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
 public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.ItemHolder> {
 
+    private static final int EMPTY = 0;
     private static final String PRICE_FORMAT = "%.2f";
     private List<Contenedor.CommandDetail> commands;
     private Context context;
@@ -52,7 +51,8 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
             final Producto currentProduct = current.getProduct();
             holder.tvCommandItemName.setText(currentProduct.getNombre());
             holder.tvCommandItemAmount.setText(String.valueOf(currentCommand.getUnidades()));
-            holder.tvCommandItemPrice.setText(String.format(Locale.GERMAN, PRICE_FORMAT, currentProduct.getPrecio() * currentCommand.getUnidades()));
+            String total = String.format(Locale.GERMAN, PRICE_FORMAT, currentProduct.getPrecio() * currentCommand.getUnidades()) + " " + context.getString(R.string.euro);
+            holder.tvCommandItemPrice.setText(total);
             holder.tvCommandItemLess.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -76,7 +76,7 @@ public class CommandViewAdapter extends RecyclerView.Adapter<CommandViewAdapter.
 
     @Override
     public int getItemCount() {
-        int elements = 0;
+        int elements = EMPTY;
         if (commands != null) {
             elements = commands.size();
         }

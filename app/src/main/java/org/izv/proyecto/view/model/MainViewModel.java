@@ -5,7 +5,6 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import org.izv.proyecto.model.data.Comanda;
 import org.izv.proyecto.model.data.Factura;
@@ -41,6 +40,11 @@ public class MainViewModel extends AndroidViewModel {
 
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
         productRepository.setOnFailureListener(onFailureListener);
+    }
+
+    public void setOnFailureListener(Repository.OnFailureListener onInvoiceFailureListener, Repository.OnFailureListener onTableFailureListener) {
+        invoiceRepository.setOnFailureListener(onInvoiceFailureListener);
+        tableRepository.setOnFailureListener(onTableFailureListener);
     }
 
     public ViewModel<Producto> productViewModel = new ViewModel<Producto>() {
@@ -106,11 +110,6 @@ public class MainViewModel extends AndroidViewModel {
             commandRepository.setUrl(url);
         }
     };
-
-    public void setOnFailureListener(Repository.OnFailureListener onInvoiceFailureListener, Repository.OnFailureListener onTableFailureListener) {
-        invoiceRepository.setOnFailureListener(onInvoiceFailureListener);
-        tableRepository.setOnFailureListener(onTableFailureListener);
-    }
 
     public ViewModel<Factura> invoiceViewModel = new ViewModel<Factura>() {
         @Override

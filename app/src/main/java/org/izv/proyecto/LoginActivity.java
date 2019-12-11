@@ -38,11 +38,11 @@ import org.izv.proyecto.view.utils.Settings;
 import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
-    private static final String FILE_LOGIN = "login";
-    private static final String KEY_LOGIN_ID = "id";
     private static final long FIELD_VISIBILITY_DELAY = 100;
+    private static final String FILE_LOGIN = "login";
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
     private static final String KEY_DEFAULT_VALUE = "informatica.ieszaidinvergeles.org:8043";
+    private static final String KEY_LOGIN_ID = "id";
     private static final int KEY_LOGIN_INTENT = 0;
     private static final String KEY_URL = "url";
     private static final long POST_ANIM_ALPHA_DELAY = 1500;
@@ -55,48 +55,13 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText etUserName, etPassword;
     private TextInputLayout ilUserName, ilPassword;
     private Animation initApp;
+    private ImageView ivLoading;
+    private TypedArray loadingBg;
+    private AlertDialog loadingDialog;
+    private Splash splash;
     private TextView tvUserName, tvPassword, tvLogin;
     private String url;
     private LoginViewModel viewModel;
-    private AlertDialog loadingDialog;
-    private ImageView ivLoading;
-    private Splash splash;
-    private TypedArray loadingBg;
-
-    @Override
-    protected void onStop() {
-        splash.setLoading(false);
-        super.onStop();
-    }
-
-    private LoginActivity initLoadingAlertDialogComponents() {
-        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.charging, null);
-        dialogBuilder.setView(dialogView);
-        loadingDialog = dialogBuilder.create();
-        loadingDialog.show();
-        loadingDialog.setCancelable(false);
-        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
-        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
-            @Override
-            public void onFinished() {
-                afterSplash();
-            }
-        });
-        splash.execute();
-        return this;
-    }
-
-    private LoginActivity afterSplash() {
-        if (!this.isDestroyed()) {
-            loadingDialog.cancel();
-            initAnimations()
-                    .showComponents();
-        }
-        return this;
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -136,17 +101,31 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        splash.setLoading(false);
+        super.onStop();
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(SAVED_USER_NAME, etUserName.getText().toString());
         outState.putString(SAVED_PASSWORD, etPassword.getText().toString());
     }
 
-
     private LoginActivity adjustUserNameValues(CharSequence s) {
         if (etPassword.hasFocus() && s.length() == 0) {
             tvUserName.setVisibility(View.INVISIBLE);
             etUserName.setHint(getString(R.string.ilUserName));
+        }
+        return this;
+    }
+
+    private LoginActivity afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
+            initAnimations()
+                    .showComponents();
         }
         return this;
     }
@@ -228,11 +207,6 @@ public class LoginActivity extends AppCompatActivity {
         return this;
     }
 
-    private LoginActivity showConexionError() {
-        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
-        return this;
-    }
-
     private LoginActivity findAdecuateError(TextInputEditText et, TextInputLayout il, String userError, String passwordError) {
         switch (et.getId()) {
             case R.id.etUserName:
@@ -257,6 +231,14 @@ public class LoginActivity extends AppCompatActivity {
         return this;
     }
 
+    private boolean hasConexion() {
+        boolean conexion = false;
+        if (employees != null && !employees.isEmpty()) {
+            conexion = true;
+        }
+        return conexion;
+    }
+
     private boolean hasCredentials() {
         boolean value = false;
         if (employees != null) {
@@ -268,6 +250,14 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         return value;
+    }
+
+    private boolean hasIp() {
+        boolean ip = false;
+        if (!url.isEmpty()) {
+            ip = true;
+        }
+        return ip;
     }
 
     private LoginActivity initAnimations() {
@@ -292,7 +282,26 @@ public class LoginActivity extends AppCompatActivity {
         tvLogin = findViewById(R.id.tvLogin);
         viewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         initApp = AnimationUtils.loadAnimation(this, R.anim.anim_alpha);
-        Log.v("xyz", url + "caca");
+        return this;
+    }
+
+    private LoginActivity initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
+            @Override
+            public void onFinished() {
+                afterSplash();
+            }
+        });
+        splash.execute();
         return this;
     }
 
@@ -316,23 +325,6 @@ public class LoginActivity extends AppCompatActivity {
             splash.setLoading(false);
         }
         return this;
-    }
-
-    private boolean hasIp() {
-        boolean ip = false;
-        if (!url.isEmpty()) {
-            Log.v("xyz", url);
-            ip = true;
-        }
-        return ip;
-    }
-
-    private boolean hasConexion() {
-        boolean conexion = false;
-        if (employees != null && !employees.isEmpty()) {
-            conexion = true;
-        }
-        return conexion;
     }
 
     private LoginActivity manageFocus(final TextInputEditText currentEt, final TextView currentTv, boolean hasFocus) {
@@ -403,7 +395,6 @@ public class LoginActivity extends AppCompatActivity {
         return this;
     }
 
-
     private LoginActivity setFocusedValues(final TextInputEditText currentEt, final TextView currentTv) {
         currentEt.setBackground(getDrawable(R.drawable.et_focused_background));
         currentTv.setTextColor(ContextCompat.getColor(this, R.color.white));
@@ -463,6 +454,11 @@ public class LoginActivity extends AppCompatActivity {
         };
         Delay delay = new Delay(POST_ANIM_ALPHA_DELAY, afterDelay);
         delay.start();
+        return this;
+    }
+
+    private LoginActivity showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         return this;
     }
 

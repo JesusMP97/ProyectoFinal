@@ -24,7 +24,6 @@ public class LoginViewModel extends AndroidViewModel implements ViewModel<Emplea
         employeeRepository = new EmployeeRepository(url);
     }
 
-
     public void setOnFailureListener(Repository.OnFailureListener onFailureListener) {
         employeeRepository.setOnFailureListener(onFailureListener);
     }

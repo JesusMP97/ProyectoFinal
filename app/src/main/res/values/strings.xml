@@ -28,7 +28,7 @@
     <string name="title_activity_settings">Settings</string>
 
     <!-- Preference Titles -->
-    <string name="messages_title">Your settings</string>
+    <string name="messages_title">Settings</string>
     <string name="sync_header">Sync</string>
 
     <!-- Messages Preferences -->
@@ -113,7 +113,11 @@
     <string name="_9">9</string>
     <string name="_10">10</string>
     <string name="_11">11</string>
-    <string name="payConfirm">Estás seguro que quieres realizar el pago?</string>
+    <string name="payConfirm">Estás seguro de que quieres realizar el pago?</string>
     <string name="payConfirmTitle">Pago</string>
+    <string name="linkError">No se pueden unir mesas unidas</string>
+    <string name="deleteError">No se pueden borrar mesas unidas</string>
+    <string name="cantDelete">No puedes borrar mesas unidas</string>
+    <string name="example">Example</string>
 
 </resources>

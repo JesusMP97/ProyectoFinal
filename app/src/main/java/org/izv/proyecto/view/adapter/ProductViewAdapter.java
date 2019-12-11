@@ -37,15 +37,16 @@ import java.util.regex.Pattern;
 public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.ItemHolder> implements Filterable {
 
     private static final int BLUE_COLOR = 0;
+    private static final int EMPTY = 0;
     private static final int FIRST_LETTER_POSITION = 0;
     private static final int GREEN_COLOR = 2;
     private static Context context;
+    private static String search = "";
     private ProductViewAdapterFilter filter;
+    private SpannableStringBuilder fullText;
     private LayoutInflater inflater;
     private OnClickListener onClickListener;
     private List<Producto> products, productsAll;
-    private static String search = "";
-    private SpannableStringBuilder fullText;
 
     public ProductViewAdapter(Context context) {
         filter = new ProductViewAdapterFilter();
@@ -63,19 +64,15 @@ public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.
     public ItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new ItemHolder(inflater.inflate(R.layout.product_item, parent, false));
     }
-    private void bindItem(TextView item, String text) {
-        fullText = new SpannableStringBuilder(text);
-        item.setText(highlightSearchText(fullText, search));
-    }
+
     @Override
     public void onBindViewHolder(@NonNull ItemHolder holder, final int position) {
         if (products != null) {
             final Producto current = products.get(position);
-            //holder.ivProductItem.setImageBitmap(getBitmapFromURL(url+current.getId()));
             holder.bind(current);
             String name = current.getNombre();
             bindItem(holder.tvProductItemName, name);
-            String price = String.valueOf(current.getPrecio());
+            String price = current.getPrecio() + " " + context.getString(R.string.euro);
             bindItem(holder.tvProductItemPrice, price);
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -88,17 +85,37 @@ public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.
         }
     }
 
-    public List<Producto> getProducts() {
-        return products;
-    }
-
     @Override
     public int getItemCount() {
-        int elements = 0;
+        int elements = EMPTY;
         if (products != null) {
             elements = products.size();
         }
         return elements;
+    }
+
+    private void bindItem(TextView item, String text) {
+        fullText = new SpannableStringBuilder(text);
+        item.setText(highlightSearchText(fullText, search));
+    }
+
+    public List<Producto> getProducts() {
+        return products;
+    }
+
+    public static SpannableStringBuilder highlightSearchText(SpannableStringBuilder fullText, String searchText) {
+        if (searchText.isEmpty()) {
+            return fullText;
+        }
+        SpannableStringBuilder wordSpan = new SpannableStringBuilder(fullText);
+        Pattern p = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(fullText);
+        while (m.find()) {
+            int wordStart = m.start();
+            int wordEnd = m.end();
+            setWordSpan(wordSpan, wordStart, wordEnd);
+        }
+        return wordSpan;
     }
 
     public void setData(List<Producto> products) {
@@ -110,6 +127,14 @@ public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.
 
     public void setOnClickListener(ProductViewAdapter.OnClickListener onClickListener) {
         this.onClickListener = onClickListener;
+    }
+
+    private static void setWordSpan(SpannableStringBuilder wordSpan, int wordStart, int wordEnd) {
+        int color = context.getResources().getColor(R.color.colorAccent);
+        ColorStateList redColor = new ColorStateList(new int[][]{new int[]{}}, new int[]{color});
+        TextAppearanceSpan highlightSpan = new TextAppearanceSpan(null, Typeface.BOLD, -1, redColor, null);
+        wordSpan.setSpan(highlightSpan, wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        wordSpan.setSpan(new RelativeSizeSpan(1.15f), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     public interface OnClickListener {
@@ -135,6 +160,21 @@ public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.
     }
 
     public class ProductViewAdapterFilter extends Filter {
+        @Override
+        protected FilterResults performFiltering(CharSequence charSequence) {
+            FilterResults filterResults = new FilterResults();
+            filterResults.values = getFilteredInvoices(charSequence);
+            return filterResults;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            products.clear();
+            products.addAll((Collection<? extends Producto>) results.values);
+            notifyDataSetChanged();
+        }
+
         private void add(Producto current, String attribute, String sequence, List<Producto> filtered) {
             if (attribute.toLowerCase().contains(sequence.toLowerCase())) {
                 if (!filtered.contains(current)) {
@@ -152,53 +192,14 @@ public class ProductViewAdapter extends RecyclerView.Adapter<ProductViewAdapter.
                 search = charSequence.toString();
                 filtered.addAll(productsAll);
             } else {
-                Log.v("MainActivity", "ENTREASSADDASSDDAS");
                 for (Producto product : productsAll) {
                     String name = product.getNombre();
                     add(product, name, charSequence.toString(), filtered);
-                    String price = String.valueOf(product.getPrecio());
+                    String price = product.getPrecio() + " " + context.getString(R.string.euro);
                     add(product, price, charSequence.toString(), filtered);
                 }
             }
             return filtered;
         }
-
-        @Override
-        protected FilterResults performFiltering(CharSequence charSequence) {
-            FilterResults filterResults = new FilterResults();
-            filterResults.values = getFilteredInvoices(charSequence);
-            return filterResults;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            products.clear();
-            products.addAll((Collection<? extends Producto>) results.values);
-            notifyDataSetChanged();
-        }
-    }
-    public static SpannableStringBuilder highlightSearchText(SpannableStringBuilder fullText, String searchText) {
-        if (searchText.isEmpty()) {
-            return fullText;
-        }
-        SpannableStringBuilder wordSpan = new SpannableStringBuilder(fullText);
-        Pattern p = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(fullText);
-        while (m.find()) {
-            int wordStart = m.start();
-            int wordEnd = m.end();
-            setWordSpan(wordSpan, wordStart, wordEnd);
-        }
-        return wordSpan;
-    }
-
-    private static void setWordSpan(SpannableStringBuilder wordSpan, int wordStart, int wordEnd) {
-        int color = context.getResources().getColor(R.color.colorAccent);
-        ColorStateList redColor = new ColorStateList(new int[][]{new int[]{}}, new int[]{color});
-        TextAppearanceSpan highlightSpan = new TextAppearanceSpan(null, Typeface.BOLD, -1, redColor, null);
-        wordSpan.setSpan(highlightSpan, wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        //wordSpan.setSpan(new BackgroundColorSpan(0xFFFCFF48), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        wordSpan.setSpan(new RelativeSizeSpan(1.15f), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 }

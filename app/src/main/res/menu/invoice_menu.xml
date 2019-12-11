@@ -4,11 +4,11 @@
         android:id="@+id/itAdd"
         android:title="@string/addCommand" />
     <item
-        android:id="@+id/itSee"
-        android:title="@string/seeCommands" />
-    <item
         android:id="@+id/itSend"
         android:title="@string/sendInvoice" />
+    <item
+        android:id="@+id/itSee"
+        android:title="@string/seeCommands" />
     <item
         android:id="@+id/itPayment"
         android:title="@string/itPayment" />

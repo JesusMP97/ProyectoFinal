@@ -14,9 +14,10 @@ import org.izv.proyecto.model.data.Factura;
 
 import java.util.List;
 
-public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>{
-    private List<Factura> facturas;
+public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> {
+    /*Jesus*/
     View v;
+    private List<Factura> facturas;
 
     public HistoryAdapter(List<Factura> facturas) {
         this.facturas = facturas;
@@ -46,7 +47,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         return facturas.size();
     }
 
-    public class HistoryViewHolder extends RecyclerView.ViewHolder{
+    public class HistoryViewHolder extends RecyclerView.ViewHolder {
         private TextView tvIdFactura, tvIdMesa, tvHoraInicio, tvHoraCierre, tvEmpInicio, tvEmpCierre, tvTotal;
 
 

@@ -17,12 +17,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.print.PrintManager;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -32,6 +32,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -63,21 +64,25 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
-    private static final String FILE_LOGIN = "login";
-    private static final String KEY_LOGIN_ID = "id";
     private static final int ASC = 1;
+    private static final String DEFAULT_VALUE = "0";
     private static final int DESC = -1;
     private static final int DOUBLE_TABLE = 2;
-    private static final int FIRST_ELEMENT = 0;
     private static final long EMPTY = 0;
+    private static final String FILE_LOGIN = "login";
     private static final String FILE_SETTINGS = "org.izv.proyecto_preferences";
+    private static final int FIRST_ELEMENT = 0;
     private static final int FREE_TABLE = 1;
     private static final long HORIZONTAL_TABLE_ID = 12;
+    private static final String INTENT_TYPE = "application/pdf";
     private static final String KEY_ACTION_MODE = "actionmode";
     private static final String KEY_DEFAULT_VALUE = "0";
     private static final String KEY_HISTORY = "history";
     private static final String KEY_INVOICE = "invoice";
+    private static final String KEY_LOGIN_ID = "id";
     private static final int KEY_MAIN_INTENT = 1;
+    private static final String KEY_MAP_DIALOG = "showed";
+    private static final String KEY_SEARCH = "search";
     private static final String KEY_TABLE = "table";
     private static final String KEY_URL = "url";
     private static final long MAIN_DEFAULT_VALUE = 0;
@@ -86,35 +91,33 @@ public class MainActivity extends AppCompatActivity {
     private static final int OCTA_TABLE = 8;
     private static final int QUADRUPLE_TABLE = 4;
     private static final int RESERVED_TABLE = 2;
-    private static final String KEY_MAP_DIALOG = "showed";
-    private static final String KEY_SEARCH = "search";
     private static final int SINGLE_TABLE = 1;
-    private static final String INTENT_TYPE = "application/pdf";
+    private static final int TEXT_PADDING = 30;
+    private static final int TEXT_PADDING_X = 70;
+    private static final float TEXT_SIZE = 20F;
     private ActionMode actionMode;
     private MainViewAdapter adapter;
-    private boolean commandsArrived, productsArrived;
-    private AlertDialog mapDialog, loadingDialog;
     private SubActionButton btLogOut, btHistory, btSettings;
+    private List<Comanda> commands;
+    private boolean commandsArrived, productsArrived;
     private Mesa current;
+    private Factura currentInvoice;
     private FloatingActionButton fab;
+    private List<Factura> invoicesFiltered;
     private ImageView ivDoubleTable1, ivDoubleTable2, ivDoubleTable3, ivDoubleTable4, ivDoubleTable5, ivDoubleTable6, ivDoubleTable7, ivDoubleTable8, ivQuadrupleTable1, ivQuadrupleTable2, ivQuadrupleTable3, ivQuadrupleTable4, ivOctaTable1, ivOctaTable2, ivOctaTable3, ivBar1, ivBar2, ivBar3, ivBar4, ivBar5;
+    private ImageView ivLoading;
+    private TypedArray loadingBg;
+    private AlertDialog mapDialog, loadingDialog;
+    private List<Producto> products;
     private RecyclerView rvList;
+    private Bundle savedInstanceState;
+    private Splash splash;
     private SearchView svSearch;
+    private List<Mesa> tableList;
     private List<ImageView> tables;
     private Toolbar tb;
     private String url, search;
     private MainViewModel viewModel;
-    private List<Mesa> tableList;
-    private List<Factura> invoicesFiltered;
-    private Bundle savedInstanceState;
-    private ImageView ivLoading;
-    private Splash splash;
-    private TypedArray loadingBg;
-    private Factura currentInvoice;
-    private List<Comanda> commands;
-    private List<Producto> products;
-    private static final String DEFAULT_VALUE = "0";
-    private List<Long> deletedIds = new ArrayList<>();
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -156,40 +159,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         splash.setLoading(false);
+        splash.setLoading2(false);
         super.onStop();
-    }
-
-    private MainActivity initLoadingAlertDialogComponents() {
-        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.charging, null);
-        dialogBuilder.setView(dialogView);
-        loadingDialog = dialogBuilder.create();
-        loadingDialog.show();
-        loadingDialog.setCancelable(false);
-        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
-        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
-            @Override
-            public void onFinished() {
-                afterSplash();
-            }
-        });
-        splash.setLoading2(true);
-        splash.execute();
-        return this;
-    }
-
-    private MainActivity afterSplash() {
-        if (!this.isDestroyed()) {
-            loadingDialog.cancel();
-            if (savedInstanceState != null && savedInstanceState.getBoolean(KEY_MAP_DIALOG)) {
-                createDialog()
-                        .initDialogComponents()
-                        .assignDialogEvents();
-            }
-        }
-        return this;
     }
 
     @Override
@@ -233,30 +204,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private MainActivity sortInvoicesByPrice(final int critery) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            invoicesFiltered.sort(new Comparator<Factura>() {
-                @Override
-                public int compare(Factura f1, Factura f2) {
-                    return Float.compare(f1.getTotal(), f2.getTotal()) * critery;
-                }
-            });
-        }
-        return this;
-    }
-
-    private MainActivity sortInvoicesByTime(final int critery) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            invoicesFiltered.sort(new Comparator<Factura>() {
-                @Override
-                public int compare(Factura f1, Factura f2) {
-                    return f1.getHorainicio().compareTo(f2.getHorainicio()) * critery;
-                }
-            });
-        }
-        return this;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -283,65 +230,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private List<Comanda> getFilteredCommands() {
-        List<Comanda> filtered = new ArrayList<>();
-        for (Comanda command : commands) {
-            if (command.getIdfactura() == currentInvoice.getId()) {
-                filtered.add(command);
-            }
-        }
-        return filtered;
-    }
-
-    private List<Comanda> getFilteredCommands(List<Factura> invoices, Factura main) {
-        List<Comanda> filtered = new ArrayList<>();
-        for (Factura invoice : invoices) {
-            if (invoice.getId() != main.getId()) {
-                for (Comanda command : commands) {
-                    if (command.getIdfactura() == invoice.getId()) {
-                        command.setIdfactura(main.getId());
-                        filtered.add(command);
-                    }
-                }
-            }
-        }
-        return filtered;
-    }
-
-    private File getInvoicePdf() {
-        File file = null;
-        if (productsArrived && commandsArrived) {
-            List<Comanda> commands = getFilteredCommands();
-            PrintDocument printDocument = new PrintDocument(this, products, commands);
-            file = printDocument.createPdf();
-        }
-        return file;
-    }
-
-    private MainActivity print() {
-        if (productsArrived && commandsArrived) {
-            List<Comanda> commands = getFilteredCommands();
-            PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
-            String jobName = this.getString(R.string.app_name) + " " + getString(R.string.document);
-            PrintDocument printDocument = new PrintDocument(this, products, commands);
-            printManager.print(jobName, printDocument, null);
-        }
-        return this;
-    }
-
-    private MainActivity sendPdf() {
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType(INTENT_TYPE);
-        Uri uri = Uri.parse(getInvoicePdf().getAbsolutePath());
-        intent.putExtra(Intent.EXTRA_STREAM, uri);
-        try {
-            startActivity(Intent.createChooser(intent, getString(R.string.share)));
-        } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), getString(R.string.shareError), Toast.LENGTH_SHORT).show();
-        }
-        return this;
-    }
-
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -349,7 +237,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivityFromResult(currentInvoice);
                 break;
             case R.id.itSee:
-                Intent intent = new Intent(this, SeeCommandActivity.class);
+                Intent intent = new Intent(this, CommandsSavedActivity.class)
+                        .putExtra(KEY_INVOICE, currentInvoice);
                 startActivity(intent);
                 break;
             case R.id.itSend:
@@ -367,69 +256,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onContextItemSelected(item);
     }
 
-    private MainActivity deleteCommands() {
-        List<Comanda> commands = getFilteredCommands();
-        for (Comanda command : commands) {
-            viewModel.commandViewModel.delete(command);
-        }
-        return this;
-    }
-
-    private MainActivity pay() {
-        createDialog(getString(R.string.payConfirm), getString(R.string.payConfirmTitle), new BeforePayment() {
-            @Override
-            public void doIt() {
-                createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
-                    @Override
-                    public void doIt() {
-                        print();
-                    }
-                }, new BeforePayment() {
-                    @Override
-                    public void doIt() {
-                        deleteCommands()
-                                .updateTableState()
-                                .finishInvoice();
-                    }
-                });
-            }
-        }, null);
-        return this;
-    }
-
-    private MainActivity updateTableState() {
-        Mesa mainTable = null;
-        for (Mesa table : tableList) {
-            if (table.getId() == currentInvoice.getIdmesa()) {
-                if (table.getMesaprincipal() == table.getId()) {
-                    mainTable = table;
-                } else {
-                    table.setEstado(FREE_TABLE);
-                    viewModel.tableViewModel.update(table);
-                }
-            }
-        }
-        if (mainTable != null) {
-            for (Mesa table : tableList) {
-                if (table.getMesaprincipal() == mainTable.getId()) {
-                    Log.v("cba", table.toString());
-                    table.setEstado(FREE_TABLE);
-                    table.setMesaprincipal(MAIN_DEFAULT_VALUE);
-                    viewModel.tableViewModel.update(table);
-                }
+    private MainActivity afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
+            if (savedInstanceState != null && savedInstanceState.getBoolean(KEY_MAP_DIALOG)) {
+                createDialog()
+                        .initDialogComponents()
+                        .assignDialogEvents();
             }
         }
         return this;
     }
-
-    private MainActivity finishInvoice() {
-        long idEmp = Long.parseLong(IO.readPreferences(this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
-        currentInvoice.setIdempleadocierre(idEmp);
-        currentInvoice.setHoracierre(Time.getCurrentTime());
-        viewModel.invoiceViewModel.update(currentInvoice);
-        return this;
-    }
-
 
     private MainActivity assignDialogEvents() {
         for (final ImageView iv : tables) {
@@ -440,48 +277,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-        return this;
-    }
-
-    private MainActivity createDialog(String message, String
-            title, final BeforePayment beforePayment, final BeforePayment pay) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                if (pay != null) {
-                    pay.doIt();
-                }
-                beforePayment.doIt();
-                dialog.cancel();
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                if (pay != null) {
-                    pay.doIt();
-                }
-                dialog.cancel();
-            }
-        });
-        builder.create().show();
-        return this;
-    }
-
-    private List<Factura> getFilteredInvoices(List<Factura> facturas) {
-        List<Factura> filtered = new ArrayList<>();
-        for (Factura invoice : facturas) {
-            if (invoice.getHoracierre().trim().isEmpty()) {
-                filtered.add(invoice);
-            }
-        }
-        return filtered;
-    }
-
-    private MainActivity showConexionError() {
-        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         return this;
     }
 
@@ -546,14 +341,12 @@ public class MainActivity extends AppCompatActivity {
                 createDialog()
                         .initDialogComponents()
                         .assignDialogEvents();
-                //startActivity(new Intent(MainActivity.this, CommandActivity.class));
                 return true;
             }
         });
         btLogOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                setResult(Activity.RESULT_OK, new Intent());
                 finish();
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(intent);
@@ -614,6 +407,34 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity createDialog(String message, String
+            title, final BeforePayment beforePayment, final BeforePayment pay) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        TextView view = getCustomTextView(title);
+        builder.setCustomTitle(view);
+        builder.setMessage(message);
+        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (pay != null) {
+                    pay.doIt();
+                }
+                beforePayment.doIt();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (pay != null) {
+                    pay.doIt();
+                }
+                dialog.cancel();
+            }
+        });
+        builder.create().show();
+        return this;
+    }
+
     private MainActivity createDialog() {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -624,75 +445,10 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    private MainActivity orderTablesById(List<Mesa> tableList) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            tableList.sort(new Comparator<Mesa>() {
-                @Override
-                public int compare(Mesa o1, Mesa o2) {
-                    return Long.compare(o1.getId(), o2.getId());
-                }
-            });
-        }
-        return this;
-    }
-
-    private List<Factura> getInvoicesFiltered() {
-        List<Factura> invoices = adapter.getInvoices();
-        List<Factura> filtered = new ArrayList<>();
-        for (Factura invoice : invoices) {
-            if (invoice.isSelected())
-                filtered.add(invoice);
-        }
-        return filtered;
-    }
-
-    private List<Mesa> getTablesFiltered(List<Factura> filtered) {
-        List<Mesa> tableFiltered = new ArrayList<>();
-        for (Mesa table : tableList) {
-            for (Factura invoice : filtered) {
-                if (table.getId() == invoice.getIdmesa()) {
-                    tableFiltered.add(table);
-                }
-            }
-        }
-        orderTablesById(tableFiltered);
-        return tableFiltered;
-    }
-
-    private Factura getMainInvoice(List<Factura> filtered, Mesa tableMain) {
-        Factura main = new Factura();
-        for (Factura invoice : filtered) {
-            if (invoice.getIdmesa() == tableMain.getId()) {
-                main = invoice;
-            }
-        }
-        return main;
-    }
-
-    private MainActivity updateTables(List<Mesa> filtered, Mesa tableMain) {
-        for (Mesa table : filtered) {
-            table.setMesaprincipal(tableMain.getId());
-            viewModel.tableViewModel.update(table);
-        }
-        return this;
-    }
-
-    private MainActivity updateInvoice(List<Factura> filtered, Factura main) {
-        for (Factura invoice : filtered) {
-            if (invoice != main) {
-                long idEmp = Long.parseLong(IO.readPreferences(MainActivity.this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
-                invoice.setIdempleadocierre(idEmp);
-                invoice.setHoracierre(Time.getCurrentTime());
-                viewModel.invoiceViewModel.update(invoice);
-            }
-        }
-        return this;
-    }
-
-    private MainActivity updateCommands(List<Factura> filtered, Factura main) {
-        List<Comanda> filteredCommands = getFilteredCommands(filtered, main);
-        for (Comanda command : filteredCommands) {
-            viewModel.commandViewModel.update(command);
+    private MainActivity deleteCommands() {
+        List<Comanda> commands = getFilteredCommands();
+        for (Comanda command : commands) {
+            viewModel.commandViewModel.delete(command);
         }
         return this;
     }
@@ -719,10 +475,13 @@ public class MainActivity extends AppCompatActivity {
                         List<Mesa> tableFiltered = getTablesFiltered(invoicesFiltered);
                         Mesa tableMain = tableFiltered.get(FIRST_ELEMENT);
                         Factura main = getMainInvoice(invoicesFiltered, tableMain);
-                        updateCommands(invoicesFiltered, main)
-                                .updateTables(tableFiltered, tableMain)
-                                .updateInvoice(invoicesFiltered, main);
-
+                        if (!hasLink(tableFiltered)) {
+                            updateCommands(invoicesFiltered, main)
+                                    .updateTables(tableFiltered, tableMain)
+                                    .updateInvoice(invoicesFiltered, main);
+                        } else {
+                            Toast.makeText(MainActivity.this, getText(R.string.linkError), Toast.LENGTH_SHORT).show();
+                        }
                         actionMode.finish();
                         return true;
                     }
@@ -753,11 +512,114 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private List<Factura> filterInvoices(String date) {
+        List<Factura> filtered = new ArrayList<>();
+        for (int i = 0; i < invoicesFiltered.size(); i++) {
+            if (invoicesFiltered.get(i).getHorainicio().contains(date)) {
+                filtered.add(invoicesFiltered.get(i));
+            }
+        }
+        return filtered;
+    }
+
     private MainActivity findMapViewById(ImageView view, int id) {
         view = mapDialog.findViewById(id);
         setSelectedTableValues(view);
         tables.add(view);
         return this;
+    }
+
+    private MainActivity finishInvoice() {
+        long idEmp = Long.parseLong(IO.readPreferences(this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
+        currentInvoice.setIdempleadocierre(idEmp);
+        currentInvoice.setHoracierre(Time.getCurrentTime());
+        viewModel.invoiceViewModel.update(currentInvoice);
+        return this;
+    }
+
+    public Mesa getCurrentTable(Factura invoice) {
+        Mesa currentTable = new Mesa();
+        for (Mesa table : tableList) {
+            if (table.getId() == invoice.getIdmesa()) {
+                currentTable = table;
+            }
+        }
+        return currentTable;
+    }
+
+    private TextView getCustomTextView(String title) {
+        TextView textView = new TextView(this);
+        textView.setText(title);
+        textView.setPadding(TEXT_PADDING_X, TEXT_PADDING, TEXT_PADDING_X, TEXT_PADDING);
+        textView.setTextSize(TEXT_SIZE);
+        textView.setBackgroundColor(getResources().getColor(R.color.lightPurple1));
+        textView.setTextColor(Color.WHITE);
+        return textView;
+    }
+
+    private List<Comanda> getFilteredCommands() {
+        List<Comanda> filtered = new ArrayList<>();
+        for (Comanda command : commands) {
+            if (command.getIdfactura() == currentInvoice.getId()) {
+                filtered.add(command);
+            }
+        }
+        return filtered;
+    }
+
+    private List<Comanda> getFilteredCommands(List<Factura> invoices, Factura main) {
+        List<Comanda> filtered = new ArrayList<>();
+        for (Factura invoice : invoices) {
+            if (invoice.getId() != main.getId()) {
+                for (Comanda command : commands) {
+                    if (command.getIdfactura() == invoice.getId()) {
+                        command.setIdfactura(main.getId());
+                        filtered.add(command);
+                    }
+                }
+            }
+        }
+        return filtered;
+    }
+
+    private List<Factura> getFilteredInvoices(List<Factura> facturas) {
+        List<Factura> filtered = new ArrayList<>();
+        for (Factura invoice : facturas) {
+            if (invoice.getHoracierre().trim().isEmpty()) {
+                filtered.add(invoice);
+            }
+        }
+        return filtered;
+    }
+
+    private File getInvoicePdf() {
+        File file = null;
+        if (productsArrived && commandsArrived) {
+            List<Comanda> commands = getFilteredCommands();
+            PrintDocument printDocument = new PrintDocument(this, products, commands);
+            file = printDocument.createPdf();
+        }
+        return file;
+    }
+
+    private List<Factura> getInvoicesFiltered() {
+        List<Factura> invoices = adapter.getInvoices();
+        List<Factura> filtered = new ArrayList<>();
+        for (Factura invoice : invoices) {
+            if (invoice.isSelected())
+                filtered.add(invoice);
+        }
+        return filtered;
+    }
+
+    private Factura getMainInvoice(List<Factura> filtered, Mesa tableMain) {
+        Factura main = new Factura();
+        for (Factura invoice : filtered) {
+            if (invoice.getIdmesa() == tableMain.getId()) {
+                main = invoice;
+            }
+        }
+        return main;
     }
 
     public TypedArray getSelectedTableBackgrounds(int capacity, long tableId) {
@@ -781,6 +643,29 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return tablesBg;
+    }
+
+    private List<Mesa> getTablesFiltered(List<Factura> filtered) {
+        List<Mesa> tableFiltered = new ArrayList<>();
+        for (Mesa table : tableList) {
+            for (Factura invoice : filtered) {
+                if (table.getId() == invoice.getIdmesa()) {
+                    tableFiltered.add(table);
+                }
+            }
+        }
+        orderTablesById(tableFiltered);
+        return tableFiltered;
+    }
+
+    private boolean hasLink(List<Mesa> tableFiltered) {
+        boolean link = false;
+        for (Mesa table : tableFiltered) {
+            if (table.getMesaprincipal() > 0) {
+                link = true;
+            }
+        }
+        return link;
     }
 
     private MainActivity initComponents() {
@@ -822,41 +707,6 @@ public class MainActivity extends AppCompatActivity {
                 .findMapViewById(ivBar3, R.id.ivBar3)
                 .findMapViewById(ivBar4, R.id.ivBar4)
                 .findMapViewById(ivBar5, R.id.ivBar5);
-
-        return this;
-    }
-
-    private List<Factura> filterInvoices(String date) {
-        List<Factura> filtered = new ArrayList<>();
-        for (int i = 0; i < invoicesFiltered.size(); i++) {
-            if (invoicesFiltered.get(i).getHorainicio().contains(date)) {
-                filtered.add(invoicesFiltered.get(i));
-            }
-        }
-        return filtered;
-    }
-
-    private void sendToHistory(String date) {
-        Intent intent = new Intent(this, HistoryActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(KEY_HISTORY, (ArrayList<? extends Parcelable>) filterInvoices(date));
-        intent.putExtras(bundle);
-        startActivity(intent);
-    }
-
-    private MainActivity showDatePickerDialog() {
-        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                Calendar c = Calendar.getInstance();
-                c.set(Calendar.YEAR, year);
-                c.set(Calendar.MONTH, month);
-                c.set(Calendar.DAY_OF_MONTH, day);
-                final String selectedDate = day + getString(R.string.dash) + (month + 1) + getString(R.string.dash) + year;
-                sendToHistory(selectedDate);
-            }
-        });
-        newFragment.show(this.getSupportFragmentManager(), null);
         return this;
     }
 
@@ -886,6 +736,27 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
+            @Override
+            public void onFinished() {
+                afterSplash();
+            }
+        });
+        splash.setLoading2(true);
+        splash.execute();
+        return this;
+    }
+
     public boolean isFree(long idTable) {
         boolean free = false;
         for (Mesa table : tableList) {
@@ -895,6 +766,72 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return free;
+    }
+
+    private MainActivity orderTablesById(List<Mesa> tableList) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            tableList.sort(new Comparator<Mesa>() {
+                @Override
+                public int compare(Mesa o1, Mesa o2) {
+                    return Long.compare(o1.getId(), o2.getId());
+                }
+            });
+        }
+        return this;
+    }
+
+    private MainActivity pay() {
+        createDialog(getString(R.string.payConfirm), getString(R.string.payConfirmTitle), new BeforePayment() {
+            @Override
+            public void doIt() {
+                createDialog(getString(R.string.print), getString(R.string.print2), new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        print();
+                    }
+                }, new BeforePayment() {
+                    @Override
+                    public void doIt() {
+                        deleteCommands()
+                                .updateTableState()
+                                .finishInvoice();
+                    }
+                });
+            }
+        }, null);
+        return this;
+    }
+
+    private MainActivity print() {
+        if (productsArrived && commandsArrived) {
+            List<Comanda> commands = getFilteredCommands();
+            PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
+            String jobName = this.getString(R.string.app_name) + " " + getString(R.string.document);
+            PrintDocument printDocument = new PrintDocument(this, products, commands);
+            printManager.print(jobName, printDocument, null);
+        }
+        return this;
+    }
+
+    private MainActivity sendPdf() {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType(INTENT_TYPE);
+        Uri uri = Uri.parse(getInvoicePdf().getAbsolutePath());
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.share)));
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), getString(R.string.shareError), Toast.LENGTH_SHORT).show();
+        }
+        return this;
+    }
+
+    private void sendToHistory(String date) {
+        Intent intent = new Intent(this, HistoryActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(KEY_HISTORY, (ArrayList<? extends Parcelable>) filterInvoices(date));
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     private MainActivity setOnClickMessage(int state, long tableId) {
@@ -960,6 +897,51 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private MainActivity showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
+        return this;
+    }
+
+    private MainActivity showDatePickerDialog() {
+        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                Calendar c = Calendar.getInstance();
+                c.set(Calendar.YEAR, year);
+                c.set(Calendar.MONTH, month);
+                c.set(Calendar.DAY_OF_MONTH, day);
+                final String selectedDate = day + getString(R.string.dash) + (month + 1) + getString(R.string.dash) + year;
+                sendToHistory(selectedDate);
+            }
+        });
+        newFragment.show(this.getSupportFragmentManager(), null);
+        return this;
+    }
+
+    private MainActivity sortInvoicesByPrice(final int critery) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            invoicesFiltered.sort(new Comparator<Factura>() {
+                @Override
+                public int compare(Factura f1, Factura f2) {
+                    return Float.compare(f1.getTotal(), f2.getTotal()) * critery;
+                }
+            });
+        }
+        return this;
+    }
+
+    private MainActivity sortInvoicesByTime(final int critery) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            invoicesFiltered.sort(new Comparator<Factura>() {
+                @Override
+                public int compare(Factura f1, Factura f2) {
+                    return f1.getHorainicio().compareTo(f2.getHorainicio()) * critery;
+                }
+            });
+        }
+        return this;
+    }
+
     private MainActivity startActivityFromResult(Factura invoice) {
         if (actionMode != null) {
             actionMode.finish();
@@ -971,14 +953,56 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    public Mesa getCurrentTable(Factura invoice) {
-        Mesa currentTable = new Mesa();
-        for (Mesa table : tableList) {
-            if (table.getId() == invoice.getIdmesa()) {
-                currentTable = table;
+    private MainActivity updateCommands(List<Factura> filtered, Factura main) {
+        List<Comanda> filteredCommands = getFilteredCommands(filtered, main);
+        for (Comanda command : filteredCommands) {
+            viewModel.commandViewModel.update(command);
+        }
+        return this;
+    }
+
+    private MainActivity updateInvoice(List<Factura> filtered, Factura main) {
+        for (Factura invoice : filtered) {
+            if (invoice != main) {
+                long idEmp = Long.parseLong(IO.readPreferences(MainActivity.this, FILE_LOGIN, KEY_LOGIN_ID, DEFAULT_VALUE));
+                invoice.setIdempleadocierre(idEmp);
+                invoice.setHoracierre(Time.getCurrentTime());
+                viewModel.invoiceViewModel.update(invoice);
             }
         }
-        return currentTable;
+        return this;
+    }
+
+    private MainActivity updateTableState() {
+        Mesa mainTable = null;
+        for (Mesa table : tableList) {
+            if (table.getId() == currentInvoice.getIdmesa()) {
+                if (table.getMesaprincipal() == table.getId()) {
+                    mainTable = table;
+                } else {
+                    table.setEstado(FREE_TABLE);
+                    viewModel.tableViewModel.update(table);
+                }
+            }
+        }
+        if (mainTable != null) {
+            for (Mesa table : tableList) {
+                if (table.getMesaprincipal() == mainTable.getId()) {
+                    table.setEstado(FREE_TABLE);
+                    table.setMesaprincipal(MAIN_DEFAULT_VALUE);
+                    viewModel.tableViewModel.update(table);
+                }
+            }
+        }
+        return this;
+    }
+
+    private MainActivity updateTables(List<Mesa> filtered, Mesa tableMain) {
+        for (Mesa table : filtered) {
+            table.setMesaprincipal(tableMain.getId());
+            viewModel.tableViewModel.update(table);
+        }
+        return this;
     }
 
     private class ItemTouchHandler extends ItemTouchHelper.SimpleCallback {
@@ -992,47 +1016,37 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        private void updateTableState(Mesa table, List<Mesa> tables, int state, long idTable) {
-            List<Long> ids = deletedIds;
-            deletedIds = new ArrayList<>();
-            int cont = 0;
-            if (table.getMesaprincipal() > EMPTY) {
-                for (Mesa current : tables) {
-                    if (current.getMesaprincipal() == table.getMesaprincipal()) {
-                        deletedIds.add(current.getMesaprincipal());
-                        current.setEstado(state);
-                        if (idTable > EMPTY) {
-                            current.setMesaprincipal(ids.get(cont));
-                        } else {
-                            current.setMesaprincipal(idTable);
-                        }
-                        viewModel.tableViewModel.update(current);
-                        cont++;
-                    }
-                }
-            } else {
-                table.setEstado(state);
-                viewModel.tableViewModel.update(table);
-            }
-        }
-
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             final Factura current = adapter.getInvoices().get(viewHolder.getAdapterPosition());
             current.setHoracierre(null);
             final Mesa currentTable = getCurrentTable(current);
-            updateTableState(currentTable, tableList, FREE_TABLE, EMPTY);
+            updateTableState(currentTable, FREE_TABLE, EMPTY);
             viewModel.invoiceViewModel.delete(current);
             View parentLayout = findViewById(android.R.id.content);
-            Snackbar.make(parentLayout, getString(R.string.invoiceDeleted), Snackbar.LENGTH_SHORT)
-                    .setAction(getString(R.string.des), new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            updateTableState(currentTable, tableList, OCCUPIED_TABLE, NO_EMPTY);
-                            viewModel.invoiceViewModel.add(current);
-                        }
-                    })
-                    .show();
+            if (currentTable.getMesaprincipal() > EMPTY) {
+                Toast.makeText(MainActivity.this, getString(R.string.cantDelete), Toast.LENGTH_SHORT).show();
+                updateTableState(currentTable, OCCUPIED_TABLE, currentTable.getMesaprincipal());
+                viewModel.invoiceViewModel.add(current);
+            } else {
+                Snackbar.make(parentLayout, getString(R.string.invoiceDeleted), Snackbar.LENGTH_SHORT)
+                        .setAction(getString(R.string.des), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                updateTableState(currentTable, OCCUPIED_TABLE, currentTable.getMesaprincipal());
+                                viewModel.invoiceViewModel.add(current);
+                            }
+                        })
+                        .show();
+            }
+        }
+
+        private void updateTableState(Mesa current, int state, long main) {
+            if (current.getMesaprincipal() == EMPTY) {
+                current.setMesaprincipal(main);
+                current.setEstado(state);
+                viewModel.tableViewModel.update(current);
+            }
         }
     }
 }

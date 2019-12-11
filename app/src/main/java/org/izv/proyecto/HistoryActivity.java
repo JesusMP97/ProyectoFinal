@@ -14,6 +14,9 @@ import org.izv.proyecto.view.adapter.HistoryAdapter;
 import java.util.List;
 
 public class HistoryActivity extends AppCompatActivity {
+
+    /*Jesus*/
+
     private static final String KEY_HISTORY = "history";
     private Toolbar tb;
     RecyclerView rvItems;

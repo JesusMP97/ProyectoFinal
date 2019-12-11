@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Contenedor {
 
@@ -133,6 +134,20 @@ public class Contenedor {
         public CommandDetail setCommand(Comanda command) {
             this.command = command;
             return this;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CommandDetail that = (CommandDetail) o;
+            return Objects.equals(command.getIdproducto(), that.command.getIdproducto()) &&
+                    Objects.equals(product.getId(), that.product.getId());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(command, product);
         }
 
         public Producto getProduct() {

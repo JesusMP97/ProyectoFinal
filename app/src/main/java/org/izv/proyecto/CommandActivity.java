@@ -18,7 +18,6 @@ import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -58,53 +57,53 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandActivity extends AppCompatActivity {
-    private static final long DEFAULT_UNITS = 1;
-    private static final long EMTY = 0;
-    private static final String FILE_LOGIN = "login";
-    private static final String KEY_LOGIN_ID = "id";
     private static final int ASC = 1;
     private static final long COMMAND_UNDELIVERABLE = 0;
+    private static final float DEFAULT_PRICE = 0;
+    private static final long DEFAULT_UNITS = 1;
+    private static final String DEFAULT_VALUE = "0";
     private static final int DESC = -1;
-    private static final String KEY_SEARCH = "search";
-    private static final int OCCUPIED_TABLE = 0;
+    private static final long EMTY = 0;
+    private static final String FILE_LOGIN = "login";
     private static final float GUIDE_DEFAULT_VALUE = 0.6f;
     private static final float GUIDE_MAX_VALUE = 1.0f;
     private static final String KEY_COMMANDS = "commands";
-    private static final float DEFAULT_PRICE = 0;
-    private static final String DEFAULT_VALUE = "0";
     private static final String KEY_INVOICE = "invoice";
+    private static final String KEY_LOGIN_ID = "id";
     private static final String KEY_PRODUCTS = "products";
+    private static final String KEY_SEARCH = "search";
     private static final String KEY_TABLE = "table";
     private static final long MIN_AMOUNT = 1;
+    private static final int OCCUPIED_TABLE = 0;
     private static final long POST_CLOSE_SEARCH_VIEW = 300;
     private static final String PRICE_FORMAT = "%.2f";
-    private SubActionButton btLogOut, btSettings;
+    private SubActionButton btSettings;
     private HashMap<String, List<String>> categoriesMap;
     private ConstraintLayout clContainter;
     private CommandViewAdapter commandAdapter;
+    private boolean enabled;
+    private EndSplash endSplash;
     private FloatingActionButton fab;
+    private com.google.android.material.floatingactionbutton.FloatingActionButton fabf;
     private Guideline glX;
-    private MenuItem itSearch;
-    private ProductViewAdapter productAdapter;
-    private List<Producto> products, currentProducts;
-    private RecyclerView rvProductList, rvCommandList;
-    private SearchView svSearch;
-    private Toolbar tb;
-    private TextView tvCommandTotal;
-    private CommandViewModel viewModel;
-    private Contenedor.CommandDetail removed;
-    private ImageView ivLoading;
-    private Splash splash;
-    private TypedArray loadingBg;
-    private AlertDialog loadingDialog;
     private Long idInvoice;
     private Factura invoice;
-    private boolean enabled;
+    private MenuItem itSearch;
+    private ImageView ivLoading;
+    private TypedArray loadingBg;
+    private AlertDialog loadingDialog;
+    private ProductViewAdapter productAdapter;
+    private List<Producto> products, currentProducts;
+    private Contenedor.CommandDetail removed;
+    private RecyclerView rvProductList, rvCommandList;
     private Bundle savedInstanceState;
     private String search, url;
+    private Splash splash;
+    private SearchView svSearch;
+    private Toolbar tb;
     private float totalPrice;
-    private EndSplash endSplash;
-    private com.google.android.material.floatingactionbutton.FloatingActionButton fabf;
+    private TextView tvCommandTotal;
+    private CommandViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,16 +119,23 @@ public class CommandActivity extends AppCompatActivity {
                 .setSavedInstanceValues();
     }
 
-    private CommandActivity setSavedInstanceValues() {
-        if (savedInstanceState != null) {
-            if (savedInstanceState.getParcelableArrayList(KEY_COMMANDS) != null) {
-                List<Contenedor.CommandDetail> commandDetailList = savedInstanceState.getParcelableArrayList(KEY_COMMANDS);
-                commandAdapter.setData(commandDetailList);
-            }
-            search = savedInstanceState.getString(KEY_SEARCH);
-            setCommandTotalValue();
+    @Override
+    protected void onStop() {
+        splash.setLoading(false);
+        if (endSplash != null) {
+            endSplash.setLoading(false);
+            endSplash.setLoading2(false);
         }
-        return this;
+        super.onStop();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(KEY_COMMANDS, (ArrayList<? extends Parcelable>) commandAdapter.getCommands());
+        outState.putParcelableArrayList(KEY_PRODUCTS, (ArrayList<? extends Parcelable>) productAdapter.getProducts());
+        String search = svSearch.getQuery().toString();
+        outState.putString(KEY_SEARCH, search);
     }
 
     @Override
@@ -223,20 +229,10 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    private CommandActivity createInvoice() {
-        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
-        if (getInvoice != null) {
-            assignInvoice(getInvoice);
-        } else {
-            addInvoice();
+    private CommandActivity addCommands(List<Contenedor.CommandDetail> commandDetail) {
+        for (Contenedor.CommandDetail command : commandDetail) {
+            viewModel.commandViewModel.add(command.getCommand());
         }
-        return this;
-    }
-
-    private CommandActivity assignInvoice(Factura getInvoice) {
-        invoice = getInvoice;
-        idInvoice = invoice.getId();
-        enabled = true;
         return this;
     }
 
@@ -252,58 +248,6 @@ public class CommandActivity extends AppCompatActivity {
         float total = DEFAULT_PRICE;
         invoice.setTotal(total);
         viewModel.invoiceViewModel.add(invoice);
-        return this;
-    }
-
-    @Override
-    protected void onStop() {
-        splash.setLoading(false);
-        if (endSplash != null) {
-            endSplash.setLoading(false);
-            endSplash.setLoading2(false);
-        }
-        super.onStop();
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(KEY_COMMANDS, (ArrayList<? extends Parcelable>) commandAdapter.getCommands());
-        outState.putParcelableArrayList(KEY_PRODUCTS, (ArrayList<? extends Parcelable>) productAdapter.getProducts());
-        String search = svSearch.getQuery().toString();
-        outState.putString(KEY_SEARCH, search);
-    }
-
-    private CommandActivity initLoadingAlertDialogComponents() {
-        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.charging, null);
-        dialogBuilder.setView(dialogView);
-        loadingDialog = dialogBuilder.create();
-        loadingDialog.show();
-        loadingDialog.setCancelable(false);
-        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
-        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
-        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
-            @Override
-            public void onFinished() {
-                afterSplash();
-            }
-        });
-        splash.execute();
-        return this;
-    }
-
-    private CommandActivity initEndSplash(OnSplash onSplash) {
-        endSplash = new EndSplash(onSplash);
-        endSplash.execute();
-        return this;
-    }
-
-    private CommandActivity afterSplash() {
-        if (!this.isDestroyed()) {
-            loadingDialog.cancel();
-        }
         return this;
     }
 
@@ -325,40 +269,10 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    private CommandActivity showConexionError() {
-        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
-        return this;
-    }
-
-    private CommandActivity updateInvoice(float total) {
-        invoice.setId(idInvoice);
-        invoice.setTotal(total + invoice.getTotal());
-        invoice.setHoracierre("");
-        viewModel.invoiceViewModel.update(invoice);
-        return this;
-    }
-
-    private CommandActivity updateTableState() {
-        Intent intent = getIntent();
-        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
-        if (getInvoice == null) {
-            Mesa table = intent.getParcelableExtra(KEY_TABLE);
-            table.setEstado(OCCUPIED_TABLE);
-            viewModel.tableViewModel.update(table);
+    private CommandActivity afterSplash() {
+        if (!this.isDestroyed()) {
+            loadingDialog.cancel();
         }
-        return this;
-    }
-
-    private CommandActivity addCommands(List<Contenedor.CommandDetail> commandDetail) {
-        for (Contenedor.CommandDetail command : commandDetail) {
-            viewModel.commandViewModel.add(command.getCommand());
-        }
-        return this;
-    }
-
-    private CommandActivity endActivity() {
-        setResult(RESULT_OK);
-        finish();
         return this;
     }
 
@@ -434,6 +348,13 @@ public class CommandActivity extends AppCompatActivity {
                 return true;
             }
         });
+        btSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CommandActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
         productAdapter.setOnClickListener(new ProductViewAdapter.OnClickListener() {
             @Override
             public void onItemLongClick(Producto product) {
@@ -450,6 +371,54 @@ public class CommandActivity extends AppCompatActivity {
                         .setCommandTotalValue();
             }
         });
+        return this;
+    }
+
+    private CommandActivity assignInvoice(Factura getInvoice) {
+        invoice = getInvoice;
+        idInvoice = invoice.getId();
+        enabled = true;
+        return this;
+    }
+
+    private CommandActivity assignMenuEvents() {
+        itSearch.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                setVisibility(View.GONE);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                adjustComponents()
+                        .setVisibility(View.VISIBLE);
+                return true;
+            }
+        });
+
+        svSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                productAdapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+        return this;
+    }
+
+    private CommandActivity createInvoice() {
+        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
+        if (getInvoice != null) {
+            assignInvoice(getInvoice);
+        } else {
+            addInvoice();
+        }
         return this;
     }
 
@@ -507,48 +476,9 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
-    private CommandActivity removeSelectedCommand() {
-        if (removed != null) {
-            commandAdapter.getCommands().remove(removed);
-        }
-        return this;
-    }
-
-    private CommandActivity setVisibility(int visibility) {
-        fabf.setVisibility(visibility);
-        fab.setVisibility(visibility);
-        tvCommandTotal.setVisibility(visibility);
-        return this;
-    }
-
-    private CommandActivity assignMenuEvents() {
-        itSearch.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                setVisibility(View.GONE);
-                return true;
-            }
-
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                adjustComponents()
-                        .setVisibility(View.VISIBLE);
-                return true;
-            }
-        });
-
-        svSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                productAdapter.getFilter().filter(newText);
-                return false;
-            }
-        });
+    private CommandActivity endActivity() {
+        setResult(RESULT_OK);
+        finish();
         return this;
     }
 
@@ -613,24 +543,53 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    private CommandActivity initEndSplash(OnSplash onSplash) {
+        endSplash = new EndSplash(onSplash);
+        endSplash.execute();
+        return this;
+    }
+
     private CommandActivity initFabComponents() {
         ImageView ivFab = new ImageView(this);
         ivFab.setImageDrawable(getDrawable(R.drawable.ic_done_black_36dp));
-        ImageView ivLogOut = new ImageView(this);
-        ivLogOut.setImageDrawable(getDrawable(R.drawable.ic_exit_to_app_black_24dp));
         ImageView ivSettings = new ImageView(this);
         ivSettings.setImageDrawable(getDrawable(R.drawable.ic_settings_black_24dp));
         fab = new FloatingActionButton.Builder(this)
                 .setContentView(ivFab)
                 .build();
         SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
-        btLogOut = itemBuilder.setContentView(ivLogOut).build();
         btSettings = itemBuilder.setContentView(ivSettings).build();
         new FloatingActionMenu.Builder(this)
-                .addSubActionView(btLogOut)
                 .addSubActionView(btSettings)
                 .attachTo(fab)
                 .build();
+        return this;
+    }
+
+    private CommandActivity initLoadingAlertDialogComponents() {
+        AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.charging, null);
+        dialogBuilder.setView(dialogView);
+        loadingDialog = dialogBuilder.create();
+        loadingDialog.show();
+        loadingDialog.setCancelable(false);
+        loadingBg = getResources().obtainTypedArray(R.array.loading_background);
+        ivLoading = loadingDialog.findViewById(R.id.ivCharging);
+        splash = new Splash(loadingBg, ivLoading, loadingDialog, new OnSplash() {
+            @Override
+            public void onFinished() {
+                afterSplash();
+            }
+        });
+        splash.execute();
+        return this;
+    }
+
+    private CommandActivity removeSelectedCommand() {
+        if (removed != null) {
+            commandAdapter.getCommands().remove(removed);
+        }
         return this;
     }
 
@@ -662,12 +621,35 @@ public class CommandActivity extends AppCompatActivity {
         return this;
     }
 
+    private CommandActivity setSavedInstanceValues() {
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getParcelableArrayList(KEY_COMMANDS) != null) {
+                List<Contenedor.CommandDetail> commandDetailList = savedInstanceState.getParcelableArrayList(KEY_COMMANDS);
+                commandAdapter.setData(commandDetailList);
+            }
+            search = savedInstanceState.getString(KEY_SEARCH);
+            setCommandTotalValue();
+        }
+        return this;
+    }
 
     private CommandActivity setSupportActionBarValues() {
         setSupportActionBar(tb);
         getSupportActionBar().setTitle(getString(R.string.tbMainTitle));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        return this;
+    }
+
+    private CommandActivity setVisibility(int visibility) {
+        fabf.setVisibility(visibility);
+        fab.setVisibility(visibility);
+        tvCommandTotal.setVisibility(visibility);
+        return this;
+    }
+
+    private CommandActivity showConexionError() {
+        Toast.makeText(this, getString(R.string.conexionError), Toast.LENGTH_SHORT).show();
         return this;
     }
 
@@ -703,6 +685,25 @@ public class CommandActivity extends AppCompatActivity {
                     return Float.compare(o1.getPrecio(), o2.getPrecio());
                 }
             });
+        }
+        return this;
+    }
+
+    private CommandActivity updateInvoice(float total) {
+        invoice.setId(idInvoice);
+        invoice.setTotal(total + invoice.getTotal());
+        invoice.setHoracierre("");
+        viewModel.invoiceViewModel.update(invoice);
+        return this;
+    }
+
+    private CommandActivity updateTableState() {
+        Intent intent = getIntent();
+        Factura getInvoice = getIntent().getParcelableExtra(KEY_INVOICE);
+        if (getInvoice == null) {
+            Mesa table = intent.getParcelableExtra(KEY_TABLE);
+            table.setEstado(OCCUPIED_TABLE);
+            viewModel.tableViewModel.update(table);
         }
         return this;
     }

@@ -33,28 +33,26 @@ import org.izv.proyecto.view.utils.CustomShape;
 import org.izv.proyecto.view.utils.Time;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHolder> implements Filterable {
+    private static final int EMPTY = 0;
     private static final String FORMAT = "HH:mm";
-    private static final long EMPTY = 0;
     private static Context context;
+    private static String search = "";
     private OnCreateContextMenuListener contextMenuListener;
     private int currentSelectedPos;
     private MainViewAdapterFilter filter;
+    private SpannableStringBuilder fullText;
     private LayoutInflater inflater;
     private List<Factura> invoices, invoicesAll;
     private OnClickListener onClickListener;
+    private int position;
     private SparseBooleanArray selectedItems;
     private List<Mesa> tables;
-    private static String search = "";
-    private SpannableStringBuilder fullText;
-    private int position;
 
     public MainViewAdapter(Context context) {
         filter = new MainViewAdapterFilter();
@@ -73,45 +71,6 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
     public ItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new ItemHolder(inflater.inflate(R.layout.invoice_item, parent, false));
     }
-
-    private void bindItem(TextView item, String text) {
-        fullText = new SpannableStringBuilder(text);
-        item.setText(highlightSearchText(fullText, search));
-    }
-
-    private String getTableNumbers(Mesa table, List<Mesa> tables) {
-        String tableNumbers = "  ";
-        if (table.getMesaprincipal() > EMPTY) {
-            if (table.getMesaprincipal() == table.getId()) {
-                tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
-                for (Mesa current : tables) {
-                    if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
-                        tableNumbers += current.getId() + context.getString(R.string.coma) + " ";
-                    }
-                }
-            }
-        } else {
-            tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
-        }
-        return tableNumbers.substring(0, tableNumbers.length() - 2);
-    }
-
-    private long getTotalClients(Mesa table, List<Mesa> tables) {
-        long total = EMPTY;
-        if (table.getMesaprincipal() > EMPTY) {
-            if (table.getMesaprincipal() == table.getId()) {
-                for (Mesa current : tables) {
-                    if (current.getMesaprincipal() == table.getMesaprincipal()) {
-                        total += current.getCapacidad();
-                    }
-                }
-            }
-        } else {
-            total = table.getCapacidad();
-        }
-        return total;
-    }
-
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -157,6 +116,20 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         if (currentSelectedPos == position) currentSelectedPos = -1;
     }
 
+    @Override
+    public int getItemCount() {
+        int elements = EMPTY;
+        if (invoices != null) {
+            elements = invoices.size();
+        }
+        return elements;
+    }
+
+    private void bindItem(TextView item, String text) {
+        fullText = new SpannableStringBuilder(text);
+        item.setText(highlightSearchText(fullText, search));
+    }
+
     public Mesa getCurrentTable(Factura current) {
         Mesa mesa = new Mesa();
         for (Mesa table : tables) {
@@ -167,33 +140,60 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         return mesa;
     }
 
-    @Override
-    public int getItemCount() {
-        int elements = 0;
-        if (invoices != null) {
-            elements = invoices.size();
-        }
-        return elements;
-    }
-
-    public void deleteCommands() {
-        List<Factura> productList = new ArrayList<>();
-        for (Factura invoice : this.invoices) {
-            if (invoice.isSelected()) {
-                productList.add(invoice);
-            }
-        }
-        this.invoices.removeAll(productList);
-        notifyDataSetChanged();
-        currentSelectedPos = -1;
-    }
-
     public List<Factura> getInvoices() {
         return invoices;
     }
 
     public SparseBooleanArray getSelectedItems() {
         return selectedItems;
+    }
+
+    private String getTableNumbers(Mesa table, List<Mesa> tables) {
+        String tableNumbers = "  ";
+        if (table.getMesaprincipal() > EMPTY) {
+            if (table.getMesaprincipal() == table.getId()) {
+                tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
+                for (Mesa current : tables) {
+                    if (current.getMesaprincipal() != current.getId() && current.getMesaprincipal() == table.getMesaprincipal()) {
+                        tableNumbers += current.getId() + context.getString(R.string.coma) + " ";
+                    }
+                }
+            }
+        } else {
+            tableNumbers += table.getId() + context.getString(R.string.coma) + " ";
+        }
+        return tableNumbers.substring(0, tableNumbers.length() - 2);
+    }
+
+    private long getTotalClients(Mesa table, List<Mesa> tables) {
+        long total = EMPTY;
+        if (table.getMesaprincipal() > EMPTY) {
+            if (table.getMesaprincipal() == table.getId()) {
+                for (Mesa current : tables) {
+                    if (current.getMesaprincipal() == table.getMesaprincipal()) {
+                        total += current.getCapacidad();
+                    }
+                }
+            }
+        } else {
+            total = table.getCapacidad();
+        }
+        return total;
+    }
+
+    public static SpannableStringBuilder highlightSearchText(SpannableStringBuilder fullText, String searchText) {
+        if (searchText.isEmpty()) {
+            return fullText;
+        }
+        SpannableStringBuilder wordSpan = new SpannableStringBuilder(fullText);
+        Pattern p = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(fullText);
+        while (m.find()) {
+            int wordStart = m.start();
+            int wordEnd = m.end();
+            setWordSpan(wordSpan, wordStart, wordEnd);
+        }
+        return wordSpan;
     }
 
     public void setContextMenuListener(OnCreateContextMenuListener contextMenuListener) {
@@ -209,14 +209,22 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         }
     }
 
+    public void setOnClickListener(OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
+
     public void setTables(List<Mesa> tables) {
         this.tables = tables;
         notifyDataSetChanged();
 
     }
 
-    public void setOnClickListener(OnClickListener onClickListener) {
-        this.onClickListener = onClickListener;
+    private static void setWordSpan(SpannableStringBuilder wordSpan, int wordStart, int wordEnd) {
+        int color = context.getResources().getColor(R.color.colorAccent);
+        ColorStateList redColor = new ColorStateList(new int[][]{new int[]{}}, new int[]{color});
+        TextAppearanceSpan highlightSpan = new TextAppearanceSpan(null, Typeface.BOLD, -1, redColor, null);
+        wordSpan.setSpan(highlightSpan, wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        wordSpan.setSpan(new RelativeSizeSpan(1.15f), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     public void toggleSelection(int position) {
@@ -234,6 +242,7 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
     public interface OnCreateContextMenuListener {
         void onCreateContextMenu(ContextMenu menu, Factura invoice, int position);
     }
+
 
     public interface OnClickListener {
         void onItemClick(int pos);
@@ -280,8 +289,22 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
         }
     }
 
-
     public class MainViewAdapterFilter extends Filter {
+        @Override
+        protected FilterResults performFiltering(CharSequence charSequence) {
+            FilterResults filterResults = new FilterResults();
+            filterResults.values = getFilteredInvoices(charSequence);
+            return filterResults;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            invoices.clear();
+            invoices.addAll((Collection<? extends Factura>) results.values);
+            notifyDataSetChanged();
+        }
+
         private void add(Factura current, String attribute, String sequence, List<Factura> filtered) {
             if (attribute.toLowerCase().contains(sequence.toLowerCase())) {
                 if (!filtered.contains(current)) {
@@ -318,44 +341,5 @@ public class MainViewAdapter extends RecyclerView.Adapter<MainViewAdapter.ItemHo
             }
             return filtered;
         }
-
-        @Override
-        protected FilterResults performFiltering(CharSequence charSequence) {
-            FilterResults filterResults = new FilterResults();
-            filterResults.values = getFilteredInvoices(charSequence);
-            return filterResults;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            invoices.clear();
-            invoices.addAll((Collection<? extends Factura>) results.values);
-            notifyDataSetChanged();
-        }
-    }
-
-    public static SpannableStringBuilder highlightSearchText(SpannableStringBuilder fullText, String searchText) {
-        if (searchText.isEmpty()) {
-            return fullText;
-        }
-        SpannableStringBuilder wordSpan = new SpannableStringBuilder(fullText);
-        Pattern p = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(fullText);
-        while (m.find()) {
-            int wordStart = m.start();
-            int wordEnd = m.end();
-            setWordSpan(wordSpan, wordStart, wordEnd);
-        }
-        return wordSpan;
-    }
-
-    private static void setWordSpan(SpannableStringBuilder wordSpan, int wordStart, int wordEnd) {
-        int color = context.getResources().getColor(R.color.colorAccent);
-        ColorStateList redColor = new ColorStateList(new int[][]{new int[]{}}, new int[]{color});
-        TextAppearanceSpan highlightSpan = new TextAppearanceSpan(null, Typeface.BOLD, -1, redColor, null);
-        wordSpan.setSpan(highlightSpan, wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        //wordSpan.setSpan(new BackgroundColorSpan(0xFFFCFF48), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        wordSpan.setSpan(new RelativeSizeSpan(1.15f), wordStart, wordEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 }
