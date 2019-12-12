@@ -119,5 +119,10 @@
     <string name="deleteError">No se pueden borrar mesas unidas</string>
     <string name="cantDelete">No puedes borrar mesas unidas</string>
     <string name="example">Example</string>
+    <string name="name">Name</string>
+    <string name="amount">Amount</string>
+    <string name="total2">Total</string>
+    <string name="totalCom">Total: 0 €</string>
+    <string name="history">Historial</string>
 
 </resources>

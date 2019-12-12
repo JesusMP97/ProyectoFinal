@@ -1,5 +1,7 @@
 package org.izv.proyecto;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -10,7 +12,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -28,8 +33,11 @@ import org.izv.proyecto.view.splash.OnSplash;
 import org.izv.proyecto.view.splash.Splash;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class CommandsSavedActivity extends AppCompatActivity {
 
@@ -69,9 +77,9 @@ public class CommandsSavedActivity extends AppCompatActivity {
     private CommandsSavedActivity afterSplash() {
         if (!this.isDestroyed()) {
             loadingDialog.cancel();
-            List<Contenedor.CommandDetail> all = getAll();
-            adapter.setData(all);
-            String total = getString(R.string.total) + " " + getTotalPrice() + " " + getString(R.string.euro);
+            List<Contenedor.CommandDetail> list = getAll();
+            adapter.setData(list);
+            String total = getString(R.string.total) + " " + getTotalPrice(list) + " " + getString(R.string.euro);
             tvTotalPrice.setText(total);
         }
         return this;
@@ -113,48 +121,64 @@ public class CommandsSavedActivity extends AppCompatActivity {
         List<Comanda> filteredCommands = getFilteredCommands();
         List<Contenedor.CommandDetail> commandDetailList = new ArrayList<>();
         for (Comanda command : filteredCommands) {
-            for (Producto product : products) {
-                if (command.getIdproducto() == product.getId()) {
-                    Contenedor.CommandDetail commandDetail = new Contenedor.CommandDetail();
-                    commandDetail.setCommand(command);
-                    commandDetail.setProduct(product);
-                    long units = getCommandUnits(command, filteredCommands);
-                    commandDetail.getCommand().setUnidades(units);
-                    if (!commandDetailList.contains(commandDetail)) {
-                        commandDetailList.add(commandDetail);
-                    }
-                }
-            }
+            Producto product = getProductById(command.getIdproducto());
+            Contenedor.CommandDetail commandDetail = new Contenedor.CommandDetail();
+            commandDetail.setProduct(product);
+            commandDetail.setCommand(command);
+            commandDetailList.add(commandDetail);
         }
         return commandDetailList;
     }
 
-    private long getCommandUnits(Comanda current, List<Comanda> commands) {
-        long units = EMPTY;
-        for (Comanda command : commands) {
-            if (command.getIdproducto() == current.getIdproducto()) {
-                units++;
+    private Producto getProductById(long id) {
+        Producto product = null;
+        for (Producto current : products) {
+            if (current.getId() == id) {
+                product = current;
             }
         }
-
-        return units;
+        return product;
     }
 
+
     private List<Comanda> getFilteredCommands() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            commands.sort(new Comparator<Comanda>() {
+                @Override
+                public int compare(Comanda o1, Comanda o2) {
+                    return Long.compare(o1.getIdproducto(), o2.getIdproducto());
+                }
+            });
+        }
         Factura invoice = getIntent().getParcelableExtra(KEY_INVOICE);
+        HashMap<Long, List<Comanda>> map = new HashMap<>();
         List<Comanda> filtered = new ArrayList<>();
-        for (Comanda command : commands) {
-            if (invoice.getId() == command.getIdfactura() && !filtered.contains(command)) {
-                filtered.add(command);
+        List<Comanda> list = new ArrayList<>();
+
+        for (int i = 0; i < commands.size(); i++) {
+            if (invoice.getId() == commands.get(i).getIdfactura()) {
+                if (!map.containsKey(commands.get(i).getIdproducto())) {
+                    list = new ArrayList<>();
+                    list.add(commands.get(i));
+                    map.put(commands.get(i).getIdproducto(), list);
+                } else {
+                    list.add(commands.get(i));
+                }
             }
+        }
+        for (Map.Entry<Long, List<Comanda>> entry : map.entrySet()) {
+            long units = EMPTY;
+            for (Comanda comanda : entry.getValue()) {
+                units += comanda.getUnidades();
+            }
+            filtered.add(entry.getValue().get(0).setUnidades(units));
         }
         return filtered;
     }
 
-    private String getTotalPrice() {
+    private String getTotalPrice(List<Contenedor.CommandDetail> list) {
         float total = EMPTY;
-        List<Contenedor.CommandDetail> all = getAll();
-        for (Contenedor.CommandDetail commandDetail : all) {
+        for (Contenedor.CommandDetail commandDetail : list) {
             total += commandDetail.getCommand().getUnidades() * commandDetail.getProduct().getPrecio();
         }
         return String.format(Locale.GERMAN, PRICE_FORMAT, total);
@@ -184,6 +208,7 @@ public class CommandsSavedActivity extends AppCompatActivity {
                 .build();
         return this;
     }
+
 
     private CommandsSavedActivity initLoadingAlertDialogComponents() {
         AlertDialog.Builder dialogBuilder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.loadingDialog);

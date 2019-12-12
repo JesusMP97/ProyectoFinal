@@ -43,9 +43,9 @@ public class CommandsSavedAdapter extends RecyclerView.Adapter<CommandsSavedAdap
     @Override
     public void onBindViewHolder(@NonNull ItemHolder holder, int position) {
         if (commands != null) {
-            final Contenedor.CommandDetail current = commands.get(position);
-            final Comanda currentCommand = current.getCommand();
-            final Producto currentProduct = current.getProduct();
+            Contenedor.CommandDetail current = commands.get(position);
+            Comanda currentCommand = current.getCommand();
+            Producto currentProduct = current.getProduct();
             holder.tvCommandItemName.setText(currentProduct.getNombre());
             holder.tvCommandItemAmount.setText(String.valueOf(currentCommand.getUnidades()));
             String total = String.format(Locale.GERMAN, PRICE_FORMAT, currentProduct.getPrecio() * currentCommand.getUnidades()) + " " + context.getString(R.string.euro);

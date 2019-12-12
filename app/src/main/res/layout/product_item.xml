@@ -21,14 +21,18 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="F" />
 
+
     <TextView
         android:id="@+id/tvProductItemName"
         style="@style/PurpleTheme.ItemTextViewCondenseMediumFont"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="TextView"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/example"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvProductItemPrice"
         app:layout_constraintStart_toEndOf="@+id/tvProductItem"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -37,7 +41,7 @@
         style="@style/PurpleTheme.ItemTextViewCondenseMediumFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:text="@string/example"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

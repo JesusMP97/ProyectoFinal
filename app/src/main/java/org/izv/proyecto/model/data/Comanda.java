@@ -3,6 +3,8 @@ package org.izv.proyecto.model.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Objects;
+
 public class Comanda implements Parcelable {
     public static final Creator<Comanda> CREATOR = new Creator<Comanda>() {
         @Override
@@ -30,6 +32,19 @@ public class Comanda implements Parcelable {
         unidades = in.readLong();
         entregada = in.readLong();
         precio = in.readFloat();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Comanda comanda = (Comanda) o;
+        return idproducto == comanda.idproducto;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(idproducto);
     }
 
     @Override
